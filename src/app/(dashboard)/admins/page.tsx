@@ -1,9 +1,20 @@
 'use client';
 
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { Badge, Button, EmptyState, ErrorState, Field, Modal } from '@/components/ui';
+import {
+  Badge,
+  Bdi,
+  Button,
+  EmptyState,
+  ErrorState,
+  Field,
+  Modal,
+} from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
+import { useFormatters } from '@/i18n/use-format';
 import { AdminUser, Paginated, RoleSummary } from '@/lib/types';
 
 interface AdminFormState {
@@ -16,6 +27,11 @@ interface AdminFormState {
 const EMPTY_FORM: AdminFormState = { name: '', email: '', password: '', roleId: '' };
 
 export default function AdminsPage() {
+  const t = useTranslations('admins');
+  const tCommon = useTranslations('common');
+  const resolveError = useApiError();
+  const { formatRelativeTime } = useFormatters();
+
   const [admins, setAdmins] = useState<AdminUser[] | null>(null);
   const [roles, setRoles] = useState<RoleSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -43,11 +59,11 @@ export default function AdminsPage() {
       setAdmins(adminsRes.data);
       setRoles(rolesRes);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load admins');
+      setError(err instanceof ApiError ? resolveError(err) : t('loadError'));
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, [query, resolveError, t]);
 
   useEffect(() => {
     load();
@@ -95,7 +111,7 @@ export default function AdminsPage() {
       setEditing(null);
       await load();
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Save failed');
+      setFormError(resolveError(err));
     } finally {
       setSaving(false);
     }
@@ -110,7 +126,7 @@ export default function AdminsPage() {
       });
       await load();
     } catch (err) {
-      setRowError(err instanceof ApiError ? err.message : 'Update failed');
+      setRowError(resolveError(err));
     }
   }
 
@@ -123,7 +139,7 @@ export default function AdminsPage() {
       setDeleting(null);
       await load();
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Delete failed');
+      setFormError(resolveError(err));
     } finally {
       setSaving(false);
     }
@@ -134,14 +150,14 @@ export default function AdminsPage() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-widest text-gold">
-            Access
+            {t('eyebrow')}
           </p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-ink">
-            Admins
+            {t('title')}
           </h1>
         </div>
         <Button onClick={openCreate}>
-          <Plus size={16} aria-hidden /> New admin
+          <Plus size={16} aria-hidden /> {t('new')}
         </Button>
       </div>
 
@@ -155,20 +171,20 @@ export default function AdminsPage() {
         <div className="relative flex-1">
           <Search
             size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+            className="absolute start-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
             aria-hidden
           />
           <input
             type="search"
-            placeholder="Search name or email…"
-            aria-label="Search admins"
+            placeholder={t('search.placeholder')}
+            aria-label={t('search.aria')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink"
+            className="w-full rounded-lg border border-line bg-white py-2 pe-3 ps-9 text-sm text-ink"
           />
         </div>
         <Button type="submit" variant="ghost">
-          Search
+          {tCommon('actions.search')}
         </Button>
       </form>
 
@@ -183,32 +199,26 @@ export default function AdminsPage() {
 
       <div className="mt-6">
         {loading ? (
-          <p className="text-sm text-ink-soft">Loading…</p>
+          <p className="text-sm text-ink-soft">{tCommon('states.loading')}</p>
         ) : error ? (
           <ErrorState message={error} onRetry={load} />
         ) : !admins || admins.length === 0 ? (
           <EmptyState
-            title={query ? 'No admins match your search' : 'No admins yet'}
-            hint={
-              query
-                ? 'Try a different name or email.'
-                : 'Create the first admin account to get started.'
-            }
-            action={
-              !query && <Button onClick={openCreate}>New admin</Button>
-            }
+            title={query ? t('empty.noMatchTitle') : t('empty.emptyTitle')}
+            hint={query ? t('empty.noMatchHint') : t('empty.emptyHint')}
+            action={!query && <Button onClick={openCreate}>{t('new')}</Button>}
           />
         ) : (
           <div className="overflow-hidden rounded-xl border border-line bg-white">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-start text-sm">
               <thead className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Admin</th>
-                  <th className="px-4 py-3 font-medium">Role</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Last login</th>
+                  <th className="px-4 py-3 font-medium">{t('table.admin')}</th>
+                  <th className="px-4 py-3 font-medium">{t('table.role')}</th>
+                  <th className="px-4 py-3 font-medium">{t('table.status')}</th>
+                  <th className="px-4 py-3 font-medium">{t('table.lastLogin')}</th>
                   <th className="px-4 py-3 font-medium">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('table.actions')}</span>
                   </th>
                 </tr>
               </thead>
@@ -217,9 +227,10 @@ export default function AdminsPage() {
                   <tr key={admin.id}>
                     <td className="px-4 py-3">
                       <p className="font-medium text-ink">{admin.name}</p>
-                      <p className="font-mono text-xs text-ink-soft">
+                      {/* Email is a Latin value — isolate it in RTL (AC 7.3-5). */}
+                      <Bdi className="block font-mono text-xs text-ink-soft">
                         {admin.email}
-                      </p>
+                      </Bdi>
                     </td>
                     <td className="px-4 py-3">
                       <Badge
@@ -234,13 +245,15 @@ export default function AdminsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <Badge tone={admin.isActive ? 'success' : 'danger'}>
-                        {admin.isActive ? 'Active' : 'Deactivated'}
+                        {admin.isActive
+                          ? t('status.active')
+                          : t('status.deactivated')}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-ink-soft">
                       {admin.lastLoginAt
-                        ? new Date(admin.lastLoginAt).toLocaleString()
-                        : 'Never'}
+                        ? formatRelativeTime(admin.lastLoginAt)
+                        : t('lastLogin.never')}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
@@ -248,11 +261,13 @@ export default function AdminsPage() {
                           onClick={() => handleToggleStatus(admin)}
                           className="rounded px-2 py-1 text-xs text-ink-soft hover:text-ink"
                         >
-                          {admin.isActive ? 'Deactivate' : 'Reactivate'}
+                          {admin.isActive
+                            ? t('row.deactivate')
+                            : t('row.reactivate')}
                         </button>
                         <button
                           onClick={() => openEdit(admin)}
-                          aria-label={`Edit ${admin.name}`}
+                          aria-label={t('row.editAria', { name: admin.name })}
                           className="rounded p-1.5 text-ink-soft hover:text-ink"
                         >
                           <Pencil size={15} />
@@ -262,7 +277,7 @@ export default function AdminsPage() {
                             setFormError(null);
                             setDeleting(admin);
                           }}
-                          aria-label={`Delete ${admin.name}`}
+                          aria-label={t('row.deleteAria', { name: admin.name })}
                           className="rounded p-1.5 text-ink-soft hover:text-danger"
                         >
                           <Trash2 size={15} />
@@ -281,7 +296,7 @@ export default function AdminsPage() {
       <Modal
         open={editing !== null}
         onClose={() => setEditing(null)}
-        title={editing === 'new' ? 'New admin' : 'Edit admin'}
+        title={editing === 'new' ? t('form.createTitle') : t('form.editTitle')}
       >
         <form onSubmit={handleSave} className="space-y-4">
           {formError && (
@@ -293,32 +308,34 @@ export default function AdminsPage() {
             </div>
           )}
           <Field
-            label="Name"
+            label={t('form.name')}
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
           <Field
-            label="Email"
+            label={t('form.email')}
             type="email"
             required
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
           <Field
-            label="Password"
+            label={t('form.password')}
             type="password"
             required={editing === 'new'}
             hint={
               editing !== 'new'
-                ? 'Leave empty to keep the current password.'
-                : 'Min 8 characters with at least one letter and one number.'
+                ? t('form.passwordHintEdit')
+                : t('form.passwordHintCreate')
             }
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-ink">Role</span>
+            <span className="mb-1 block text-sm font-medium text-ink">
+              {t('form.role')}
+            </span>
             <select
               required
               value={form.roleId}
@@ -333,11 +350,15 @@ export default function AdminsPage() {
             </select>
           </label>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
-              Cancel
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setEditing(null)}
+            >
+              {tCommon('actions.cancel')}
             </Button>
             <Button type="submit" loading={saving}>
-              {editing === 'new' ? 'Create admin' : 'Save changes'}
+              {editing === 'new' ? t('form.createSubmit') : t('form.saveSubmit')}
             </Button>
           </div>
         </form>
@@ -347,7 +368,7 @@ export default function AdminsPage() {
       <Modal
         open={deleting !== null}
         onClose={() => setDeleting(null)}
-        title="Delete admin?"
+        title={t('delete.title')}
       >
         {formError && (
           <div
@@ -357,17 +378,24 @@ export default function AdminsPage() {
             {formError}
           </div>
         )}
-        <p className="text-sm text-ink-soft">
-          This permanently removes <strong className="text-ink">{deleting?.name}</strong>{' '}
-          ({deleting?.email}). If you only want to revoke access, consider
-          deactivating the account instead — that preserves history.
-        </p>
+        {deleting && (
+          <p className="text-sm text-ink-soft">
+            {t.rich('delete.body', {
+              name: deleting.name,
+              email: deleting.email,
+              strong: (chunks) => (
+                <strong className="text-ink">{chunks}</strong>
+              ),
+              mail: (chunks) => <Bdi className="font-mono">{chunks}</Bdi>,
+            })}
+          </p>
+        )}
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setDeleting(null)}>
-            Cancel
+            {tCommon('actions.cancel')}
           </Button>
           <Button variant="danger" loading={saving} onClick={handleDelete}>
-            Delete permanently
+            {t('delete.confirm')}
           </Button>
         </div>
       </Modal>

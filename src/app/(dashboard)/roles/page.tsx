@@ -1,9 +1,19 @@
 'use client';
 
 import { Lock, Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { Badge, Button, EmptyState, ErrorState, Field, Modal } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Code,
+  EmptyState,
+  ErrorState,
+  Field,
+  Modal,
+} from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
 import { PermissionCatalog, RoleSummary } from '@/lib/types';
 
 interface RoleFormState {
@@ -15,6 +25,10 @@ interface RoleFormState {
 const EMPTY_FORM: RoleFormState = { name: '', description: '', permissions: [] };
 
 export default function RolesPage() {
+  const t = useTranslations('roles');
+  const tCommon = useTranslations('common');
+  const resolveError = useApiError();
+
   const [roles, setRoles] = useState<RoleSummary[] | null>(null);
   const [catalog, setCatalog] = useState<PermissionCatalog>({});
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +39,19 @@ export default function RolesPage() {
   const [form, setForm] = useState<RoleFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Permission keys always render as-is in LTR code style (AC 7.4-2). Their
+  // human-readable descriptions and module group labels are translated.
+  const moduleLabel = useCallback(
+    (module: string) =>
+      t.has(`modules.${module}`) ? t(`modules.${module}`) : module,
+    [t],
+  );
+  const permissionLabel = useCallback(
+    (key: string) =>
+      t.has(`permissions.${key}`) ? t(`permissions.${key}`) : key,
+    [t],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,11 +64,11 @@ export default function RolesPage() {
       setRoles(rolesRes);
       setCatalog(catalogRes);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load roles');
+      setError(err instanceof ApiError ? resolveError(err) : t('loadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [resolveError, t]);
 
   useEffect(() => {
     load();
@@ -105,7 +132,7 @@ export default function RolesPage() {
       setEditing(null);
       await load();
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Save failed');
+      setFormError(resolveError(err));
     } finally {
       setSaving(false);
     }
@@ -120,7 +147,7 @@ export default function RolesPage() {
       setDeleting(null);
       await load();
     } catch (err) {
-      setFormError(err instanceof ApiError ? err.message : 'Delete failed');
+      setFormError(resolveError(err));
     } finally {
       setSaving(false);
     }
@@ -131,27 +158,27 @@ export default function RolesPage() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-widest text-gold">
-            Access
+            {t('eyebrow')}
           </p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-ink">
-            Roles &amp; permissions
+            {t('title')}
           </h1>
         </div>
         <Button onClick={openCreate}>
-          <Plus size={16} aria-hidden /> New role
+          <Plus size={16} aria-hidden /> {t('new')}
         </Button>
       </div>
 
       <div className="mt-6">
         {loading ? (
-          <p className="text-sm text-ink-soft">Loading…</p>
+          <p className="text-sm text-ink-soft">{tCommon('states.loading')}</p>
         ) : error ? (
           <ErrorState message={error} onRetry={load} />
         ) : !roles || roles.length === 0 ? (
           <EmptyState
-            title="No roles yet"
-            hint="Create a role to grant tailored access."
-            action={<Button onClick={openCreate}>New role</Button>}
+            title={t('empty.title')}
+            hint={t('empty.hint')}
+            action={<Button onClick={openCreate}>{t('new')}</Button>}
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -168,21 +195,21 @@ export default function RolesPage() {
                       </p>
                       {role.isSystem && (
                         <Badge tone="gold">
-                          <Lock size={11} className="mr-1" aria-hidden />
-                          System
+                          <Lock size={11} className="me-1" aria-hidden />
+                          {t('card.system')}
                         </Badge>
                       )}
                     </div>
                     <p className="mt-1 flex items-center gap-1 text-xs text-ink-soft">
                       <Users size={13} aria-hidden />
-                      {role.adminsCount} admin{role.adminsCount === 1 ? '' : 's'}
+                      {t('card.adminsCount', { count: role.adminsCount })}
                     </p>
                   </div>
                   {!role.isSystem && (
                     <div className="flex gap-1">
                       <button
                         onClick={() => openEdit(role)}
-                        aria-label={`Edit ${role.name}`}
+                        aria-label={t('card.editAria', { name: role.name })}
                         className="rounded p-1.5 text-ink-soft hover:text-ink"
                       >
                         <Pencil size={15} />
@@ -192,7 +219,7 @@ export default function RolesPage() {
                           setFormError(null);
                           setDeleting(role);
                         }}
-                        aria-label={`Delete ${role.name}`}
+                        aria-label={t('card.deleteAria', { name: role.name })}
                         className="rounded p-1.5 text-ink-soft hover:text-danger"
                       >
                         <Trash2 size={15} />
@@ -207,16 +234,16 @@ export default function RolesPage() {
 
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {role.permissions.includes('*') ? (
-                    <Badge tone="gold">Full access (*)</Badge>
+                    <Badge tone="gold">{t('card.fullAccess')}</Badge>
                   ) : role.permissions.length === 0 ? (
-                    <Badge tone="warning">No permissions</Badge>
+                    <Badge tone="warning">{t('card.noPermissions')}</Badge>
                   ) : (
                     role.permissions.map((p) => (
                       <span
                         key={p}
-                        className="rounded-full border border-line bg-paper px-2 py-0.5 font-mono text-xs text-ink-soft"
+                        className="rounded-full border border-line bg-paper px-2 py-0.5 text-xs text-ink-soft"
                       >
-                        {p}
+                        <Code>{p}</Code>
                       </span>
                     ))
                   )}
@@ -231,7 +258,7 @@ export default function RolesPage() {
       <Modal
         open={editing !== null}
         onClose={() => setEditing(null)}
-        title={editing === 'new' ? 'New role' : 'Edit role'}
+        title={editing === 'new' ? t('form.createTitle') : t('form.editTitle')}
         wide
       >
         <form onSubmit={handleSave} className="space-y-4">
@@ -244,25 +271,24 @@ export default function RolesPage() {
             </div>
           )}
           <Field
-            label="Name"
+            label={t('form.name')}
             required
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
           <Field
-            label="Description"
+            label={t('form.description')}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
 
           <fieldset>
             <legend className="mb-2 text-sm font-medium text-ink">
-              Permissions
+              {t('form.permissions')}
             </legend>
             {form.permissions.length === 0 && (
               <p className="mb-3 text-xs text-amber-700">
-                This role has no permissions — admins holding it will see an
-                empty dashboard.
+                {t('form.noPermissionsWarning')}
               </p>
             )}
             <div className="space-y-4">
@@ -276,15 +302,17 @@ export default function RolesPage() {
                     className="rounded-lg border border-line p-3"
                   >
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-sm font-medium capitalize text-ink">
-                        {module}
+                      <p className="text-sm font-medium text-ink">
+                        {moduleLabel(module)}
                       </p>
                       <button
                         type="button"
                         onClick={() => setModule(keys, !allSelected)}
                         className="text-xs text-gold underline-offset-2 hover:underline"
                       >
-                        {allSelected ? 'Clear all' : 'Select all'}
+                        {allSelected
+                          ? t('form.clearAll')
+                          : t('form.selectAll')}
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
@@ -296,13 +324,14 @@ export default function RolesPage() {
                             type="button"
                             aria-pressed={selected}
                             onClick={() => togglePermission(key)}
-                            className={`rounded-full border px-2.5 py-1 font-mono text-xs transition-colors ${
+                            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors ${
                               selected
                                 ? 'border-gold/60 bg-gold-soft text-ink'
                                 : 'border-line bg-white text-ink-soft hover:border-gold/40'
                             }`}
                           >
-                            {key}
+                            <span>{permissionLabel(key)}</span>
+                            <Code className="opacity-70">{key}</Code>
                           </button>
                         );
                       })}
@@ -314,11 +343,17 @@ export default function RolesPage() {
           </fieldset>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
-              Cancel
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setEditing(null)}
+            >
+              {tCommon('actions.cancel')}
             </Button>
             <Button type="submit" loading={saving}>
-              {editing === 'new' ? 'Create role' : 'Save changes'}
+              {editing === 'new'
+                ? t('form.createSubmit')
+                : t('form.saveSubmit')}
             </Button>
           </div>
         </form>
@@ -328,7 +363,7 @@ export default function RolesPage() {
       <Modal
         open={deleting !== null}
         onClose={() => setDeleting(null)}
-        title="Delete role?"
+        title={t('delete.title')}
       >
         {formError && (
           <div
@@ -338,23 +373,28 @@ export default function RolesPage() {
             {formError}
           </div>
         )}
-        <p className="text-sm text-ink-soft">
-          This permanently deletes the role{' '}
-          <strong className="text-ink">{deleting?.name}</strong>.
-          {deleting && deleting.adminsCount > 0 && (
-            <>
-              {' '}
-              It is currently assigned to {deleting.adminsCount} admin
-              {deleting.adminsCount === 1 ? '' : 's'} — reassign them first.
-            </>
-          )}
-        </p>
+        {deleting && (
+          <p className="text-sm text-ink-soft">
+            {t.rich('delete.body', {
+              name: deleting.name,
+              strong: (chunks) => (
+                <strong className="text-ink">{chunks}</strong>
+              ),
+            })}
+            {deleting.adminsCount > 0 && (
+              <>
+                {' '}
+                {t('delete.assigned', { count: deleting.adminsCount })}
+              </>
+            )}
+          </p>
+        )}
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setDeleting(null)}>
-            Cancel
+            {tCommon('actions.cancel')}
           </Button>
           <Button variant="danger" loading={saving} onClick={handleDelete}>
-            Delete role
+            {t('delete.confirm')}
           </Button>
         </div>
       </Modal>

@@ -1,0 +1,66 @@
+{
+  "eyebrow": "الوصول",
+  "title": "الأدوار والصلاحيات",
+  "new": "دور جديد",
+  "loadError": "تعذّر تحميل قائمة الأدوار.",
+  "empty": {
+    "title": "لا توجد أدوار بعد",
+    "hint": "أنشئ دورًا لمنح وصول مخصّص."
+  },
+  "card": {
+    "system": "دور نظام",
+    "adminsCount": "{count, plural, zero {لا مشرفين} one {مشرف واحد} two {مشرفان} few {# مشرفين} many {# مشرفًا} other {# مشرف}}",
+    "editAria": "تعديل {name}",
+    "deleteAria": "حذف {name}",
+    "fullAccess": "وصول كامل (*)",
+    "noPermissions": "بلا صلاحيات"
+  },
+  "form": {
+    "createTitle": "دور جديد",
+    "editTitle": "تعديل الدور",
+    "name": "الاسم",
+    "description": "الوصف",
+    "permissions": "مصفوفة الصلاحيات",
+    "noPermissionsWarning": "هذا الدور بلا صلاحيات — سيرى المشرفون الحاصلون عليه لوحة تحكّم فارغة.",
+    "selectAll": "تحديد الكل",
+    "clearAll": "إلغاء الكل",
+    "createSubmit": "إنشاء دور",
+    "saveSubmit": "حفظ التغييرات"
+  },
+  "delete": {
+    "title": "حذف الدور؟",
+    "body": "يؤدي هذا إلى حذف الدور <strong>{name}</strong> نهائيًا.",
+    "assigned": "إنه مُسند حاليًا إلى {count, plural, zero {لا مشرفين} one {مشرف واحد} two {مشرفين اثنين} few {# مشرفين} many {# مشرفًا} other {# مشرف}} — أعد إسنادهم أولًا.",
+    "confirm": "حذف الدور"
+  },
+  "modules": {
+    "admins": "المشرفون",
+    "roles": "الأدوار",
+    "plans": "الباقات",
+    "subscriptions": "الاشتراكات",
+    "hotels": "الفنادق",
+    "notifications": "الإشعارات"
+  },
+  "permissions": {
+    "admins.read": "عرض المشرفين",
+    "admins.create": "إنشاء المشرفين",
+    "admins.update": "تعديل المشرفين",
+    "admins.delete": "حذف المشرفين",
+    "roles.read": "عرض الأدوار",
+    "roles.create": "إنشاء الأدوار",
+    "roles.update": "تعديل الأدوار",
+    "roles.delete": "حذف الأدوار",
+    "plans.read": "عرض الباقات",
+    "plans.create": "إنشاء الباقات",
+    "plans.update": "تعديل الباقات",
+    "plans.archive": "أرشفة الباقات",
+    "subscriptions.read": "عرض الاشتراكات",
+    "subscriptions.update": "تعديل الاشتراكات",
+    "hotels.read": "عرض الفنادق",
+    "hotels.create": "إنشاء الفنادق",
+    "hotels.update": "تعديل الفنادق",
+    "hotels.suspend": "تعليق الفنادق",
+    "notifications.read": "عرض الإشعارات",
+    "notifications.resend": "إعادة إرسال الإشعارات"
+  }
+}

@@ -1,7 +1,59 @@
 'use client';
 
-import { AlertTriangle, Inbox, Loader2, X } from 'lucide-react';
-import { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, useEffect } from 'react';
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Inbox,
+  Loader2,
+  X,
+} from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+  useEffect,
+} from 'react';
+
+/* ------------------------------------------------------- Bidi isolation */
+
+/**
+ * Isolates LTR content (emails, slugs, URLs, permission keys) inside an RTL
+ * context so surrounding Arabic punctuation never visually reorders
+ * (AC 7.3-5). Renders a native <bdi>.
+ */
+export function Bdi({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <bdi className={className}>{children}</bdi>;
+}
+
+/**
+ * Code-like inline value (permission keys `admins.read`, slugs, IDs). Always
+ * LTR + monospace + bidi-isolated — these render identically in both languages
+ * (AC 7.4-2, AC 7.3-5).
+ */
+export function Code({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <code
+      dir="ltr"
+      className={`inline-block font-mono [unicode-bidi:isolate] ${className}`}
+    >
+      {children}
+    </code>
+  );
+}
 
 /* ----------------------------------------------------------------- Button */
 
@@ -107,6 +159,7 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const t = useTranslations('common');
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -135,13 +188,67 @@ export function Modal({
           </h2>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('actions.close')}
             className="rounded p-1 text-ink-soft hover:text-ink"
           >
             <X size={18} />
           </button>
         </div>
         {children}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ Pagination */
+
+/** Shared control style for the filter selects/inputs on list screens. */
+export const selectClass =
+  'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink';
+
+/** Standard list-page footer: range summary + Previous/Next. */
+export function Pagination({
+  total,
+  page,
+  pageSize,
+  onPageChange,
+}: {
+  total: number;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  const t = useTranslations('common');
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (totalPages <= 1) return null;
+
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(total, page * pageSize);
+
+  return (
+    <div className="mt-4 flex items-center justify-between text-sm text-ink-soft">
+      <p>
+        {t('pagination.summary', { from, to, total })} ·{' '}
+        {t('pagination.pageOf', { page, pages: totalPages })}
+      </p>
+      <div className="flex gap-2">
+        <Button
+          variant="ghost"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+        >
+          {/* Directional chevrons mirror in RTL (AC 7.3-4). */}
+          <ChevronLeft size={15} aria-hidden className="rtl:-scale-x-100" />{' '}
+          {t('pagination.previous')}
+        </Button>
+        <Button
+          variant="ghost"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+        >
+          {t('pagination.next')}{' '}
+          <ChevronRight size={15} aria-hidden className="rtl:-scale-x-100" />
+        </Button>
       </div>
     </div>
   );
@@ -175,14 +282,15 @@ export function ErrorState({
   message: string;
   onRetry?: () => void;
 }) {
+  const t = useTranslations('common');
   return (
     <div className="flex flex-col items-center gap-2 rounded-xl border border-danger/30 bg-danger/5 py-10 text-center">
       <AlertTriangle size={28} className="text-danger" aria-hidden />
-      <p className="font-medium text-ink">Something went wrong</p>
+      <p className="font-medium text-ink">{t('states.errorTitle')}</p>
       <p className="text-sm text-ink-soft">{message}</p>
       {onRetry && (
         <Button variant="ghost" onClick={onRetry} className="mt-2">
-          Try again
+          {t('actions.retry')}
         </Button>
       )}
     </div>

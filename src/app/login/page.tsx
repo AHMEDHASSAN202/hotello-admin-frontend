@@ -1,14 +1,21 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { Button, Field } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { tokenStore } from '@/lib/auth';
+import { useApiError } from '@/lib/errors';
 import { LoginResponse } from '@/lib/types';
+import { isLocale } from '@/i18n/config';
+import { setLocaleCookie } from '@/i18n/locale';
 
 export default function LoginPage() {
   const router = useRouter();
+  const t = useTranslations('auth.login');
+  const resolveError = useApiError();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -24,9 +31,15 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       tokenStore.set(res.accessToken, res.refreshToken);
+      // Profile language wins over the browser cookie on login (AC 7.2-2):
+      // apply it before navigating so the dashboard renders in it immediately.
+      const preferred = res.admin.preferredLanguage;
+      if (isLocale(preferred)) setLocaleCookie(preferred);
       router.push('/');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Unable to sign in');
+      setError(
+        err instanceof ApiError ? resolveError(err) : t('genericError'),
+      );
       setLoading(false);
     }
   }
@@ -42,24 +55,26 @@ export default function LoginPage() {
           </p>
         </div>
         <p className="max-w-sm font-display text-3xl font-semibold leading-snug text-white">
-          One platform for every stay,
-          <span className="text-gold"> from check-in to checkout.</span>
+          {t('taglineLead')}
+          <span className="text-gold">{t('taglineAccent')}</span>
         </p>
         <p className="text-sm text-white/50">
-          © {new Date().getFullYear()} Hotello
+          {t('copyright', { year: String(new Date().getFullYear()) })}
         </p>
       </div>
 
       {/* Sign-in form */}
-      <div className="flex flex-1 items-center justify-center bg-paper p-8">
+      <div className="flex flex-1 flex-col items-center justify-center bg-paper p-8">
+        <div className="mb-6 flex w-full max-w-sm justify-end">
+          {/* Switcher on the pre-login page reads/writes the cookie only. */}
+          <LanguageSwitcher persist={false} />
+        </div>
         <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
           <div className="mb-8">
             <h1 className="font-display text-2xl font-semibold text-ink">
-              Sign in
+              {t('title')}
             </h1>
-            <p className="mt-1 text-sm text-ink-soft">
-              Access the Super Admin dashboard
-            </p>
+            <p className="mt-1 text-sm text-ink-soft">{t('subtitle')}</p>
           </div>
 
           {error && (
@@ -72,7 +87,7 @@ export default function LoginPage() {
           )}
 
           <Field
-            label="Email"
+            label={t('email')}
             type="email"
             autoComplete="email"
             required
@@ -80,7 +95,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
           <Field
-            label="Password"
+            label={t('password')}
             type="password"
             autoComplete="current-password"
             required
@@ -89,7 +104,7 @@ export default function LoginPage() {
           />
 
           <Button type="submit" loading={loading} className="w-full">
-            Sign in
+            {t('submit')}
           </Button>
         </form>
       </div>

@@ -1,0 +1,353 @@
+{
+  "eyebrow": "Tenants",
+  "title": "Hotels",
+  "onboard": "Onboard hotel",
+  "loadError": "We couldn't load the hotels list.",
+  "detailLoadError": "We couldn't load this hotel.",
+  "notFound": "Hotel not found.",
+  "list": {
+    "search": {
+      "placeholder": "Search name or slug…",
+      "aria": "Search hotels"
+    },
+    "filters": {
+      "statusAria": "Filter by hotel status",
+      "allStatuses": "All statuses",
+      "subscriptionAria": "Filter by subscription status",
+      "allSubscriptions": "All subscriptions",
+      "planAria": "Filter by plan",
+      "allPlans": "All plans",
+      "cityAria": "Filter by city",
+      "cityPlaceholder": "City",
+      "sortAria": "Sort hotels"
+    },
+    "sort": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "nameAsc": "Name A→Z",
+      "nameDesc": "Name Z→A",
+      "planAsc": "Plan A→Z",
+      "planDesc": "Plan Z→A"
+    },
+    "table": {
+      "hotel": "Hotel",
+      "city": "City",
+      "slug": "Slug",
+      "plan": "Plan",
+      "subscription": "Subscription",
+      "status": "Status",
+      "onboarded": "Onboarded"
+    },
+    "daysLeft": "{count, plural, zero {No days left} one {# day left} two {# days left} few {# days left} many {# days left} other {# days left}}",
+    "empty": {
+      "noMatchTitle": "No hotels match your filters",
+      "noMatchHint": "Try different search terms or filters.",
+      "emptyTitle": "No hotels yet",
+      "emptyHintCanCreate": "Onboard the first hotel to start building the tenant base.",
+      "emptyHint": "Hotels appear here once they are onboarded."
+    }
+  },
+  "subscriptionStatus": {
+    "active": "Active",
+    "trial": "Trial",
+    "past_due": "Past due",
+    "canceled": "Canceled",
+    "expired": "Expired"
+  },
+  "hotelStatus": {
+    "active": "Active",
+    "suspended": "Suspended",
+    "inactive": "Inactive"
+  },
+  "onboarding": {
+    "backToHotels": "All hotels",
+    "eyebrow": "Tenants",
+    "title": "Onboard hotel",
+    "stepperAria": "Onboarding steps",
+    "steps": {
+      "profile": "Profile",
+      "plan": "Plan",
+      "owner": "Owner"
+    },
+    "plansLoadError": "We couldn't load the plans.",
+    "submitError": "Onboarding failed. Please try again.",
+    "slug": {
+      "invalid": "Lowercase letters, numbers and hyphens; 3–40 characters; no leading or trailing hyphen.",
+      "reserved": "\"{slug}\" is a reserved word.",
+      "taken": "Already taken.",
+      "reservedShort": "Reserved word.",
+      "invalidShort": "Invalid slug.",
+      "checking": "Checking availability…",
+      "available": "Available"
+    },
+    "profileStep": {
+      "nameEn": "Name (English)",
+      "nameAr": "Name (Arabic)",
+      "slug": "Slug",
+      "slugHint": "Lowercase kebab-case. Drives the tenant URLs and cannot be changed later.",
+      "contactEmail": "Contact email",
+      "contactPhone": "Contact phone",
+      "city": "City",
+      "country": "Country",
+      "timezone": "Timezone",
+      "defaultLanguage": "Default language",
+      "languageArabic": "Arabic (العربية)",
+      "languageEnglish": "English",
+      "currency": "Currency",
+      "starRating": "Star rating",
+      "optional": "(optional)",
+      "notRated": "Not rated",
+      "roomsCount": "Rooms count (optional)",
+      "roomsHint": "Compared against the plan's room limit.",
+      "address": "Address (optional)",
+      "logo": "Logo",
+      "logoPreviewAlt": "Logo preview",
+      "logoAria": "Hotel logo",
+      "logoHint": "PNG, JPG, WebP or SVG — up to 2 MB. Uploaded after the hotel is created.",
+      "logoInvalidType": "Logo must be PNG, JPG, WebP or SVG.",
+      "logoTooLarge": "Logo must be 2 MB or smaller."
+    },
+    "planStep": {
+      "loading": "Loading plans…",
+      "violationsTitle": "The selected plan cannot fit this hotel:",
+      "violationLine": "{field}: {usage} > {limit}",
+      "trialBadge": "{count, plural, zero {0-day trial} one {#-day trial} two {#-day trial} few {#-day trial} many {#-day trial} other {#-day trial}}",
+      "free": "Free",
+      "perMonth": "{price}/mo",
+      "perYear": "{price}/yr",
+      "billingCycle": "Billing cycle",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "yearlyUnavailable": "Yearly (unavailable)"
+    },
+    "ownerStep": {
+      "name": "Owner name",
+      "email": "Owner email",
+      "emailHint": "The owner gets full control of this hotel's dashboard.",
+      "note": "A one-time setup link is generated on completion. It is shown only once — copy it and share it with the hotel so the owner can set their password."
+    },
+    "success": {
+      "title": "Hotel onboarded",
+      "liveTrial": "{nameEn} · {nameAr} is live on the trial ({days} remaining).",
+      "livePlatform": "{nameEn} · {nameAr} is live on the platform.",
+      "logoWarning": "Hotel created, but the logo upload failed. You can retry from the hotel profile.",
+      "tenantDashboard": "Tenant dashboard",
+      "guestApp": "Guest app",
+      "setupLinkTitle": "Owner setup link — shown only once",
+      "setupLinkHint": "Share it with {name} ({email}) so they can set their password. It expires {expires} and cannot be viewed again — only regenerated.",
+      "copySetupLink": "Copy setup link",
+      "allHotels": "All hotels",
+      "goToHotel": "Go to hotel"
+    },
+    "nav": {
+      "back": "Back",
+      "next": "Next"
+    }
+  },
+  "detail": {
+    "backToHotels": "All hotels",
+    "eyebrow": "Tenants",
+    "logoAlt": "{name} logo",
+    "starsAria": "{count} stars",
+    "edit": "Edit",
+    "suspend": "Suspend",
+    "reactivate": "Reactivate",
+    "suspendedBanner": {
+      "title": "Suspended — {reason}",
+      "noReason": "No reason recorded",
+      "since": "Since {date}",
+      "byActor": " · by {name}",
+      "explainer": ". The tenant dashboard and guest app are fully locked; no data is deleted and the subscription is unchanged."
+    },
+    "tabs": {
+      "profile": "Profile",
+      "subscription": "Subscription",
+      "owner": "Owner",
+      "notifications": "Notifications"
+    },
+    "profile": {
+      "identity": "Identity",
+      "nameEn": "Name (EN)",
+      "nameAr": "Name (AR)",
+      "slug": "Slug",
+      "starRating": "Star rating",
+      "notRated": "Not rated",
+      "rooms": "Rooms",
+      "replaceLogo": "Replace logo",
+      "uploadLogo": "Upload logo",
+      "uploading": "Uploading…",
+      "logoInvalidType": "Logo must be PNG, JPG, WebP or SVG.",
+      "logoTooLarge": "Logo must be 2 MB or smaller.",
+      "uploadFailed": "Logo upload failed.",
+      "contact": "Contact",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "city": "City",
+      "country": "Country",
+      "locale": "Locale",
+      "timezone": "Timezone",
+      "defaultLanguage": "Default language",
+      "languageArabic": "Arabic (العربية)",
+      "languageEnglish": "English",
+      "currency": "Currency",
+      "audit": "Audit",
+      "onboardedBy": "Onboarded by",
+      "onboardedAt": "Onboarded at",
+      "lastUpdated": "Last updated",
+      "tenantUrls": "Tenant URLs",
+      "tenantUrlsHint": "Derived from the slug — share these with the hotel.",
+      "tenantUrlsSuspended": " While suspended, both resolve to an \"unavailable\" page.",
+      "tenantDashboard": "Tenant dashboard",
+      "guestApp": "Guest app"
+    },
+    "owner": {
+      "title": "Hotel owner",
+      "name": "Name",
+      "email": "Email",
+      "status": "Status",
+      "statusActive": "Active",
+      "statusPending": "Pending setup",
+      "lastLogin": "Last login",
+      "neverLoggedIn": "Never",
+      "scopeNote": "The owner holds full permissions within this hotel only and manages further staff from the tenant dashboard.",
+      "regenerate": "Regenerate setup link",
+      "noOwner": "No owner account found for this hotel."
+    },
+    "suspendDialog": {
+      "title": "Suspend hotel?",
+      "body": "Suspending <strong>{name}</strong> fully locks its tenant dashboard and guest app — staff cannot log in and guests see an \"unavailable\" page. No data is deleted and the subscription is unchanged. Reactivation restores access immediately.",
+      "reason": "Reason",
+      "note": "Note",
+      "optional": "(optional)",
+      "submit": "Suspend hotel",
+      "failed": "Suspension failed. Please try again."
+    },
+    "reactivateDialog": {
+      "title": "Reactivate hotel?",
+      "body": "<strong>{name}</strong> regains access to its tenant dashboard and guest app immediately.",
+      "submit": "Reactivate",
+      "failed": "Reactivation failed. Please try again."
+    },
+    "regenerateDialog": {
+      "titleNew": "New setup link",
+      "titleConfirm": "Regenerate setup link?",
+      "shownOnce": "Shown only once — copy it now and share it with the hotel. It expires {expires}.",
+      "copySetupLink": "Copy setup link",
+      "done": "Done",
+      "confirmBody": "A new one-time setup link is generated for <strong>{email}</strong>. The previous link stops working immediately. The action is audit-logged.",
+      "submit": "Regenerate",
+      "failed": "We couldn't regenerate the link. Please try again."
+    }
+  },
+  "reason": {
+    "non_payment": "Non-payment",
+    "policy_violation": "Policy violation",
+    "hotel_request": "Hotel request",
+    "other": "Other"
+  },
+  "form": {
+    "editTitle": "Edit hotel",
+    "nameEn": "Name (English)",
+    "nameAr": "Name (Arabic)",
+    "slug": "Slug",
+    "slugHintWildcard": "Changing the slug changes the tenant URLs — the change is audit-logged.",
+    "slugLocked": "Immutable — only Super Admin (*) can change a slug.",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "city": "City",
+    "country": "Country",
+    "timezone": "Timezone",
+    "defaultLanguage": "Default language",
+    "languageArabic": "Arabic (العربية)",
+    "languageEnglish": "English",
+    "currency": "Currency",
+    "starRating": "Star rating",
+    "notRated": "Not rated",
+    "roomsCount": "Rooms count",
+    "roomsHint": "Checked against the current plan's room limit.",
+    "address": "Address",
+    "saveFailed": "We couldn't save the changes. Please try again.",
+    "violationLine": "{field}: usage {usage}, limit {limit}",
+    "forcePastLimit": "Force past the limit",
+    "slugConfirm": {
+      "title": "Change the slug?",
+      "body": "The slug becomes <slugTag>{slug}</slugTag>, which changes the tenant dashboard and guest app URLs immediately. Links shared with the hotel stop working. The change is audit-logged with old and new values.",
+      "submit": "Change slug"
+    },
+    "forceConfirm": {
+      "title": "Force past the plan limit?",
+      "body": "The rooms count exceeds the current plan's limit. Forcing the update puts the hotel over its plan immediately — the override is audit-logged.",
+      "submit": "Force update"
+    }
+  },
+  "subscription": {
+    "loadError": "We couldn't load the subscription.",
+    "noSubscription": "No subscription",
+    "noSubscriptionHint": "This hotel has no current subscription record.",
+    "assignPlan": "Assign plan",
+    "currentPlan": "Current plan",
+    "daysRemaining": "{count, plural, zero {No days remaining} one {# day remaining} two {# days remaining} few {# days remaining} many {# days remaining} other {# days remaining}}",
+    "billingSince": "{cycle} billing · since {date}",
+    "changePlan": "Change plan",
+    "usageTitle": "Usage vs limits",
+    "unlimited": "Unlimited",
+    "usageOf": "{used} / {max}",
+    "usageUnlimited": "{used} · Unlimited",
+    "usageAria": "{label} usage",
+    "history": "History",
+    "noHistory": "No previous subscriptions.",
+    "historyTable": {
+      "plan": "Plan",
+      "cycle": "Cycle",
+      "status": "Status",
+      "period": "Period"
+    },
+    "now": "now",
+    "usageLabel": {
+      "rooms": "Rooms",
+      "staff users": "Staff users",
+      "guest requests per month": "Guest requests per month"
+    }
+  },
+  "billingCycleValue": {
+    "monthly": "Monthly",
+    "yearly": "Yearly"
+  },
+  "changePlan": {
+    "title": "Change plan",
+    "plansLoadError": "We couldn't load the plans.",
+    "failed": "The plan change failed. Please try again.",
+    "violationLine": "{field}: usage {usage}, limit {limit}",
+    "forceChange": "Force change anyway",
+    "plan": "Plan",
+    "planOptionTrial": " ({count, plural, zero {0-day trial} one {#-day trial} two {#-day trial} few {#-day trial} many {#-day trial} other {#-day trial}})",
+    "planOptionCurrent": " — current",
+    "billingCycle": "Billing cycle",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "yearlyUnavailable": " (unavailable)",
+    "submit": "Change plan",
+    "forceConfirm": {
+      "title": "Force plan change?",
+      "body": "The hotel's current usage exceeds the target plan's limits. Forcing the change puts the hotel over its new limits immediately — the override is audit-logged.",
+      "submit": "Force change"
+    }
+  },
+  "notifications": {
+    "loadError": "We couldn't load the notifications.",
+    "emptyTitle": "No notifications yet",
+    "emptyHint": "Emails to this hotel's owner appear here as the platform sends them."
+  },
+  "setupEmail": {
+    "label": "Email delivery:",
+    "checking": "Checking…",
+    "loadError": "We couldn't load the delivery status.",
+    "notSent": "Not sent yet",
+    "refreshAria": "Refresh delivery status"
+  },
+  "copy": {
+    "copy": "Copy to clipboard",
+    "copyUrl": "Copy {label} URL"
+  }
+}

@@ -1,0 +1,353 @@
+{
+  "eyebrow": "المستأجرون",
+  "title": "الفنادق",
+  "onboard": "إعداد فندق",
+  "loadError": "تعذّر تحميل قائمة الفنادق.",
+  "detailLoadError": "تعذّر تحميل هذا الفندق.",
+  "notFound": "الفندق غير موجود.",
+  "list": {
+    "search": {
+      "placeholder": "ابحث بالاسم أو المُعرّف…",
+      "aria": "البحث في الفنادق"
+    },
+    "filters": {
+      "statusAria": "التصفية حسب حالة الفندق",
+      "allStatuses": "كل الحالات",
+      "subscriptionAria": "التصفية حسب حالة الاشتراك",
+      "allSubscriptions": "كل الاشتراكات",
+      "planAria": "التصفية حسب الباقة",
+      "allPlans": "كل الباقات",
+      "cityAria": "التصفية حسب المدينة",
+      "cityPlaceholder": "المدينة",
+      "sortAria": "ترتيب الفنادق"
+    },
+    "sort": {
+      "newest": "الأحدث أولًا",
+      "oldest": "الأقدم أولًا",
+      "nameAsc": "الاسم أ→ي",
+      "nameDesc": "الاسم ي→أ",
+      "planAsc": "الباقة أ→ي",
+      "planDesc": "الباقة ي→أ"
+    },
+    "table": {
+      "hotel": "الفندق",
+      "city": "المدينة",
+      "slug": "المُعرّف (Slug)",
+      "plan": "الباقة",
+      "subscription": "الاشتراك",
+      "status": "الحالة",
+      "onboarded": "تاريخ الإعداد"
+    },
+    "daysLeft": "{count, plural, zero {لا أيام متبقية} one {يوم واحد متبقٍّ} two {يومان متبقّيان} few {# أيام متبقية} many {# يومًا متبقيًا} other {# يوم متبقٍّ}}",
+    "empty": {
+      "noMatchTitle": "لا توجد فنادق مطابقة لعوامل التصفية",
+      "noMatchHint": "جرّب كلمات بحث أو عوامل تصفية مختلفة.",
+      "emptyTitle": "لا توجد فنادق بعد",
+      "emptyHintCanCreate": "أعدّ أول فندق للبدء ببناء قاعدة المستأجرين.",
+      "emptyHint": "تظهر الفنادق هنا بعد إعدادها."
+    }
+  },
+  "subscriptionStatus": {
+    "active": "نشط",
+    "trial": "تجريبي",
+    "past_due": "مستحق السداد",
+    "canceled": "ملغى",
+    "expired": "منتهٍ"
+  },
+  "hotelStatus": {
+    "active": "نشط",
+    "suspended": "موقوف",
+    "inactive": "غير نشط"
+  },
+  "onboarding": {
+    "backToHotels": "كل الفنادق",
+    "eyebrow": "المستأجرون",
+    "title": "إعداد فندق",
+    "stepperAria": "خطوات إعداد الفندق",
+    "steps": {
+      "profile": "الملف",
+      "plan": "الباقة",
+      "owner": "المالك"
+    },
+    "plansLoadError": "تعذّر تحميل الباقات.",
+    "submitError": "فشل إعداد الفندق. حاول مرة أخرى.",
+    "slug": {
+      "invalid": "أحرف إنجليزية صغيرة وأرقام وشرطات؛ من 3 إلى 40 حرفًا؛ دون شرطة في البداية أو النهاية.",
+      "reserved": "«{slug}» كلمة محجوزة.",
+      "taken": "مستخدَم بالفعل.",
+      "reservedShort": "كلمة محجوزة.",
+      "invalidShort": "مُعرّف غير صالح.",
+      "checking": "جارٍ التحقّق من التوفّر…",
+      "available": "متوفّر"
+    },
+    "profileStep": {
+      "nameEn": "الاسم (بالإنجليزية)",
+      "nameAr": "الاسم (بالعربية)",
+      "slug": "المُعرّف (Slug)",
+      "slugHint": "أحرف صغيرة بصيغة kebab-case. يحدّد روابط المستأجر ولا يمكن تغييره لاحقًا.",
+      "contactEmail": "بريد التواصل",
+      "contactPhone": "هاتف التواصل",
+      "city": "المدينة",
+      "country": "الدولة",
+      "timezone": "المنطقة الزمنية",
+      "defaultLanguage": "اللغة الافتراضية",
+      "languageArabic": "العربية",
+      "languageEnglish": "الإنجليزية",
+      "currency": "العملة",
+      "starRating": "تصنيف النجوم",
+      "optional": "(اختياري)",
+      "notRated": "غير مصنّف",
+      "roomsCount": "عدد الغرف (اختياري)",
+      "roomsHint": "تتم مقارنته بحدّ الغرف في الباقة.",
+      "address": "العنوان (اختياري)",
+      "logo": "الشعار",
+      "logoPreviewAlt": "معاينة الشعار",
+      "logoAria": "شعار الفندق",
+      "logoHint": "بصيغة PNG أو JPG أو WebP أو SVG — حتى 2 ميغابايت. يُرفع بعد إنشاء الفندق.",
+      "logoInvalidType": "يجب أن يكون الشعار بصيغة PNG أو JPG أو WebP أو SVG.",
+      "logoTooLarge": "يجب ألّا يتجاوز حجم الشعار 2 ميغابايت."
+    },
+    "planStep": {
+      "loading": "جارٍ تحميل الباقات…",
+      "violationsTitle": "الباقة المختارة لا تتّسع لهذا الفندق:",
+      "violationLine": "{field}: {usage} > {limit}",
+      "trialBadge": "{count, plural, zero {فترة تجريبية 0 يوم} one {فترة تجريبية يوم واحد} two {فترة تجريبية يومان} few {فترة تجريبية # أيام} many {فترة تجريبية # يومًا} other {فترة تجريبية # يوم}}",
+      "free": "مجاني",
+      "perMonth": "{price}/شهريًا",
+      "perYear": "{price}/سنويًا",
+      "billingCycle": "دورة الفوترة",
+      "monthly": "شهري",
+      "yearly": "سنوي",
+      "yearlyUnavailable": "سنوي (غير متاح)"
+    },
+    "ownerStep": {
+      "name": "اسم المالك",
+      "email": "بريد المالك",
+      "emailHint": "يحصل المالك على تحكّم كامل في لوحة تحكّم هذا الفندق.",
+      "note": "يُنشأ رابط إعداد لمرة واحدة عند الاكتمال. يُعرض مرة واحدة فقط — انسخه وشاركه مع الفندق ليتمكّن المالك من تعيين كلمة مروره."
+    },
+    "success": {
+      "title": "تم إعداد الفندق",
+      "liveTrial": "{nameEn} · {nameAr} فعّال ضمن الفترة التجريبية ({days} متبقية).",
+      "livePlatform": "{nameEn} · {nameAr} فعّال على المنصّة.",
+      "logoWarning": "تم إنشاء الفندق، لكن فشل رفع الشعار. يمكنك إعادة المحاولة من ملف الفندق.",
+      "tenantDashboard": "لوحة تحكّم المستأجر",
+      "guestApp": "تطبيق الضيف",
+      "setupLinkTitle": "رابط إعداد المالك — يُعرض مرة واحدة فقط",
+      "setupLinkHint": "شاركه مع {name} ({email}) ليتمكّن من تعيين كلمة مروره. تنتهي صلاحيته في {expires} ولا يمكن عرضه مجددًا — يمكن إعادة إنشائه فقط.",
+      "copySetupLink": "نسخ رابط الإعداد",
+      "allHotels": "كل الفنادق",
+      "goToHotel": "الانتقال إلى الفندق"
+    },
+    "nav": {
+      "back": "رجوع",
+      "next": "التالي"
+    }
+  },
+  "detail": {
+    "backToHotels": "كل الفنادق",
+    "eyebrow": "المستأجرون",
+    "logoAlt": "شعار {name}",
+    "starsAria": "{count} نجوم",
+    "edit": "تعديل",
+    "suspend": "إيقاف",
+    "reactivate": "إعادة تفعيل",
+    "suspendedBanner": {
+      "title": "موقوف — {reason}",
+      "noReason": "لم يُسجَّل سبب",
+      "since": "منذ {date}",
+      "byActor": " · بواسطة {name}",
+      "explainer": ". لوحة تحكّم المستأجر وتطبيق الضيف مقفلان بالكامل؛ لا تُحذف أي بيانات ويبقى الاشتراك دون تغيير."
+    },
+    "tabs": {
+      "profile": "الملف",
+      "subscription": "الاشتراك",
+      "owner": "المالك",
+      "notifications": "الإشعارات"
+    },
+    "profile": {
+      "identity": "الهوية",
+      "nameEn": "الاسم (إنجليزي)",
+      "nameAr": "الاسم (عربي)",
+      "slug": "المُعرّف",
+      "starRating": "تصنيف النجوم",
+      "notRated": "غير مصنّف",
+      "rooms": "الغرف",
+      "replaceLogo": "استبدال الشعار",
+      "uploadLogo": "رفع شعار",
+      "uploading": "جارٍ الرفع…",
+      "logoInvalidType": "يجب أن يكون الشعار بصيغة PNG أو JPG أو WebP أو SVG.",
+      "logoTooLarge": "يجب ألّا يتجاوز حجم الشعار 2 ميغابايت.",
+      "uploadFailed": "فشل رفع الشعار.",
+      "contact": "التواصل",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "address": "العنوان",
+      "city": "المدينة",
+      "country": "الدولة",
+      "locale": "الإعدادات المحلية",
+      "timezone": "المنطقة الزمنية",
+      "defaultLanguage": "اللغة الافتراضية",
+      "languageArabic": "العربية",
+      "languageEnglish": "الإنجليزية",
+      "currency": "العملة",
+      "audit": "سجل التدقيق",
+      "onboardedBy": "أُعدّ بواسطة",
+      "onboardedAt": "تاريخ الإعداد",
+      "lastUpdated": "آخر تحديث",
+      "tenantUrls": "روابط المستأجر",
+      "tenantUrlsHint": "مشتقّة من المُعرّف — شاركها مع الفندق.",
+      "tenantUrlsSuspended": " أثناء الإيقاف، يؤدّي كلاهما إلى صفحة «غير متاح».",
+      "tenantDashboard": "لوحة تحكّم المستأجر",
+      "guestApp": "تطبيق الضيف"
+    },
+    "owner": {
+      "title": "مالك الفندق",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "status": "الحالة",
+      "statusActive": "نشط",
+      "statusPending": "بانتظار الإعداد",
+      "lastLogin": "آخر تسجيل دخول",
+      "neverLoggedIn": "لم يسجّل الدخول بعد",
+      "scopeNote": "يملك المالك صلاحيات كاملة داخل هذا الفندق فقط، ويدير بقية الموظفين من لوحة تحكّم المستأجر.",
+      "regenerate": "إعادة إنشاء رابط الإعداد",
+      "noOwner": "لا يوجد حساب مالك لهذا الفندق."
+    },
+    "suspendDialog": {
+      "title": "إيقاف الفندق؟",
+      "body": "يؤدّي إيقاف <strong>{name}</strong> إلى قفل لوحة تحكّم المستأجر وتطبيق الضيف بالكامل — لا يمكن للموظفين تسجيل الدخول ويرى الضيوف صفحة «غير متاح». لا تُحذف أي بيانات ويبقى الاشتراك دون تغيير. تُعيد إعادة التفعيل الوصول فورًا.",
+      "reason": "السبب",
+      "note": "ملاحظة",
+      "optional": "(اختياري)",
+      "submit": "إيقاف الفندق",
+      "failed": "فشل الإيقاف. حاول مرة أخرى."
+    },
+    "reactivateDialog": {
+      "title": "إعادة تفعيل الفندق؟",
+      "body": "يستعيد <strong>{name}</strong> الوصول إلى لوحة تحكّم المستأجر وتطبيق الضيف فورًا.",
+      "submit": "إعادة تفعيل",
+      "failed": "فشلت إعادة التفعيل. حاول مرة أخرى."
+    },
+    "regenerateDialog": {
+      "titleNew": "رابط إعداد جديد",
+      "titleConfirm": "إعادة إنشاء رابط الإعداد؟",
+      "shownOnce": "يُعرض مرة واحدة فقط — انسخه الآن وشاركه مع الفندق. تنتهي صلاحيته في {expires}.",
+      "copySetupLink": "نسخ رابط الإعداد",
+      "done": "تم",
+      "confirmBody": "يُنشأ رابط إعداد جديد لمرة واحدة لـ <strong>{email}</strong>. يتوقّف الرابط السابق عن العمل فورًا. يُسجَّل هذا الإجراء في سجل التدقيق.",
+      "submit": "إعادة الإنشاء",
+      "failed": "تعذّر إعادة إنشاء الرابط. حاول مرة أخرى."
+    }
+  },
+  "reason": {
+    "non_payment": "عدم السداد",
+    "policy_violation": "مخالفة السياسة",
+    "hotel_request": "بطلب من الفندق",
+    "other": "أخرى"
+  },
+  "form": {
+    "editTitle": "تعديل الفندق",
+    "nameEn": "الاسم (بالإنجليزية)",
+    "nameAr": "الاسم (بالعربية)",
+    "slug": "المُعرّف (Slug)",
+    "slugHintWildcard": "يؤدّي تغيير المُعرّف إلى تغيير روابط المستأجر — يُسجَّل هذا في سجل التدقيق.",
+    "slugLocked": "غير قابل للتغيير — يمكن لمدير النظام الأعلى (*) فقط تغيير المُعرّف.",
+    "contactEmail": "بريد التواصل",
+    "contactPhone": "هاتف التواصل",
+    "city": "المدينة",
+    "country": "الدولة",
+    "timezone": "المنطقة الزمنية",
+    "defaultLanguage": "اللغة الافتراضية",
+    "languageArabic": "العربية",
+    "languageEnglish": "الإنجليزية",
+    "currency": "العملة",
+    "starRating": "تصنيف النجوم",
+    "notRated": "غير مصنّف",
+    "roomsCount": "عدد الغرف",
+    "roomsHint": "يُتحقّق منه مقابل حدّ الغرف في الباقة الحالية.",
+    "address": "العنوان",
+    "saveFailed": "تعذّر حفظ التغييرات. حاول مرة أخرى.",
+    "violationLine": "{field}: الاستخدام {usage}، الحدّ {limit}",
+    "forcePastLimit": "التجاوز رغم الحدّ",
+    "slugConfirm": {
+      "title": "تغيير المُعرّف؟",
+      "body": "يصبح المُعرّف <slugTag>{slug}</slugTag>، ما يغيّر روابط لوحة تحكّم المستأجر وتطبيق الضيف فورًا. تتوقّف الروابط المشاركة مع الفندق عن العمل. يُسجَّل التغيير في سجل التدقيق بالقيمتين القديمة والجديدة.",
+      "submit": "تغيير المُعرّف"
+    },
+    "forceConfirm": {
+      "title": "التجاوز رغم حدّ الباقة؟",
+      "body": "عدد الغرف يتجاوز حدّ الباقة الحالية. يضع التجاوز الفندق فوق حدّ باقته فورًا — يُسجَّل التجاوز في سجل التدقيق.",
+      "submit": "فرض التحديث"
+    }
+  },
+  "subscription": {
+    "loadError": "تعذّر تحميل الاشتراك.",
+    "noSubscription": "لا يوجد اشتراك",
+    "noSubscriptionHint": "لا يوجد سجل اشتراك حالي لهذا الفندق.",
+    "assignPlan": "تعيين باقة",
+    "currentPlan": "الباقة الحالية",
+    "daysRemaining": "{count, plural, zero {لا أيام متبقية} one {يوم واحد متبقٍّ} two {يومان متبقّيان} few {# أيام متبقية} many {# يومًا متبقيًا} other {# يوم متبقٍّ}}",
+    "billingSince": "فوترة {cycle} · منذ {date}",
+    "changePlan": "تغيير الباقة",
+    "usageTitle": "الاستخدام مقابل الحدود",
+    "unlimited": "غير محدود",
+    "usageOf": "{used} / {max}",
+    "usageUnlimited": "{used} · غير محدود",
+    "usageAria": "استخدام {label}",
+    "history": "السجل",
+    "noHistory": "لا توجد اشتراكات سابقة.",
+    "historyTable": {
+      "plan": "الباقة",
+      "cycle": "الدورة",
+      "status": "الحالة",
+      "period": "الفترة"
+    },
+    "now": "الآن",
+    "usageLabel": {
+      "rooms": "الغرف",
+      "staff users": "مستخدمو الموظفين",
+      "guest requests per month": "طلبات الضيوف شهريًا"
+    }
+  },
+  "billingCycleValue": {
+    "monthly": "شهري",
+    "yearly": "سنوي"
+  },
+  "changePlan": {
+    "title": "تغيير الباقة",
+    "plansLoadError": "تعذّر تحميل الباقات.",
+    "failed": "فشل تغيير الباقة. حاول مرة أخرى.",
+    "violationLine": "{field}: الاستخدام {usage}، الحدّ {limit}",
+    "forceChange": "فرض التغيير على أي حال",
+    "plan": "الباقة",
+    "planOptionTrial": " ({count, plural, zero {فترة تجريبية 0 يوم} one {فترة تجريبية يوم واحد} two {فترة تجريبية يومان} few {فترة تجريبية # أيام} many {فترة تجريبية # يومًا} other {فترة تجريبية # يوم}})",
+    "planOptionCurrent": " — الحالية",
+    "billingCycle": "دورة الفوترة",
+    "monthly": "شهري",
+    "yearly": "سنوي",
+    "yearlyUnavailable": " (غير متاح)",
+    "submit": "تغيير الباقة",
+    "forceConfirm": {
+      "title": "فرض تغيير الباقة؟",
+      "body": "يتجاوز استخدام الفندق الحالي حدود الباقة المستهدفة. يضع فرض التغيير الفندق فوق حدوده الجديدة فورًا — يُسجَّل التجاوز في سجل التدقيق.",
+      "submit": "فرض التغيير"
+    }
+  },
+  "notifications": {
+    "loadError": "تعذّر تحميل الإشعارات.",
+    "emptyTitle": "لا توجد إشعارات بعد",
+    "emptyHint": "تظهر رسائل البريد الإلكتروني إلى مالك هذا الفندق هنا عند إرسالها من المنصّة."
+  },
+  "setupEmail": {
+    "label": "حالة تسليم البريد:",
+    "checking": "جارٍ التحقّق…",
+    "loadError": "تعذّر تحميل حالة التسليم.",
+    "notSent": "لم يُرسَل بعد",
+    "refreshAria": "تحديث حالة التسليم"
+  },
+  "copy": {
+    "copy": "نسخ إلى الحافظة",
+    "copyUrl": "نسخ رابط {label}"
+  }
+}

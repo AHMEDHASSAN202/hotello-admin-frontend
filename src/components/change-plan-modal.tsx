@@ -1,8 +1,10 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { FormEvent, useEffect, useState } from 'react';
 import { Button, Modal } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
 import { useMe } from '@/lib/use-me';
 import { BillingCycle, LimitViolation, PlanSummary } from '@/lib/types';
 
@@ -23,6 +25,9 @@ export function ChangePlanModal({
   hotelId: string;
   currentPlanId: string | null;
 }) {
+  const t = useTranslations('hotels');
+  const tCommon = useTranslations('common');
+  const resolveError = useApiError();
   const { hasPermission } = useMe();
   const isWildcard = hasPermission('*');
 
@@ -45,9 +50,13 @@ export function ChangePlanModal({
         setPlanId((cur) => cur || active.find((p) => p.id !== currentPlanId)?.id || '');
       })
       .catch((err) =>
-        setFormError(err instanceof ApiError ? err.message : 'Failed to load plans'),
+        setFormError(
+          err instanceof ApiError
+            ? resolveError(err)
+            : t('changePlan.plansLoadError'),
+        ),
       );
-  }, [open, currentPlanId]);
+  }, [open, currentPlanId, resolveError, t]);
 
   const selectedPlan = plans.find((p) => p.id === planId) ?? null;
 
@@ -69,11 +78,11 @@ export function ChangePlanModal({
     } catch (err) {
       setConfirmingForce(false);
       if (err instanceof ApiError) {
-        setFormError(err.message);
+        setFormError(resolveError(err));
         const details = err.details as { violations?: LimitViolation[] } | undefined;
         setViolations(err.status === 409 ? (details?.violations ?? []) : []);
       } else {
-        setFormError('Plan change failed');
+        setFormError(t('changePlan.failed'));
       }
     } finally {
       setSaving(false);
@@ -90,7 +99,7 @@ export function ChangePlanModal({
       <Modal
         open={open && !confirmingForce}
         onClose={onClose}
-        title="Change plan"
+        title={t('changePlan.title')}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
@@ -103,7 +112,12 @@ export function ChangePlanModal({
                 <ul className="mt-1 list-inside list-disc">
                   {violations.map((v, i) => (
                     <li key={i}>
-                      {v.message ?? `${v.field}: usage ${v.usage}, limit ${v.limit}`}
+                      {v.message ??
+                        t('changePlan.violationLine', {
+                          field: v.field,
+                          usage: v.usage,
+                          limit: v.limit,
+                        })}
                     </li>
                   ))}
                 </ul>
@@ -115,14 +129,16 @@ export function ChangePlanModal({
                   className="mt-2"
                   onClick={() => setConfirmingForce(true)}
                 >
-                  Force change anyway
+                  {t('changePlan.forceChange')}
                 </Button>
               )}
             </div>
           )}
 
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-ink">Plan</span>
+            <span className="mb-1 block text-sm font-medium text-ink">
+              {t('changePlan.plan')}
+            </span>
             <select
               required
               value={planId}
@@ -135,8 +151,14 @@ export function ChangePlanModal({
               {plans.map((plan) => (
                 <option key={plan.id} value={plan.id}>
                   {plan.nameEn}
-                  {plan.isTrial ? ` (${plan.trialDurationDays}-day trial)` : ''}
-                  {plan.id === currentPlanId ? ' — current' : ''}
+                  {plan.isTrial
+                    ? t('changePlan.planOptionTrial', {
+                        count: plan.trialDurationDays ?? 0,
+                      })
+                    : ''}
+                  {plan.id === currentPlanId
+                    ? t('changePlan.planOptionCurrent')
+                    : ''}
                 </option>
               ))}
             </select>
@@ -145,7 +167,7 @@ export function ChangePlanModal({
           {selectedPlan && !selectedPlan.isTrial && (
             <fieldset>
               <legend className="mb-1 text-sm font-medium text-ink">
-                Billing cycle
+                {t('changePlan.billingCycle')}
               </legend>
               <div className="flex gap-4 text-sm text-ink">
                 <label className="flex items-center gap-2">
@@ -155,7 +177,7 @@ export function ChangePlanModal({
                     checked={billingCycle === 'monthly'}
                     onChange={() => setBillingCycle('monthly')}
                   />
-                  Monthly
+                  {t('changePlan.monthly')}
                 </label>
                 <label
                   className={`flex items-center gap-2 ${
@@ -169,7 +191,9 @@ export function ChangePlanModal({
                     checked={billingCycle === 'yearly'}
                     onChange={() => setBillingCycle('yearly')}
                   />
-                  Yearly{selectedPlan.yearlyPrice === null && ' (unavailable)'}
+                  {t('changePlan.yearly')}
+                  {selectedPlan.yearlyPrice === null &&
+                    t('changePlan.yearlyUnavailable')}
                 </label>
               </div>
             </fieldset>
@@ -177,10 +201,10 @@ export function ChangePlanModal({
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
+              {tCommon('actions.cancel')}
             </Button>
             <Button type="submit" loading={saving} disabled={!planId}>
-              Change plan
+              {t('changePlan.submit')}
             </Button>
           </div>
         </form>
@@ -190,19 +214,17 @@ export function ChangePlanModal({
       <Modal
         open={open && confirmingForce}
         onClose={() => setConfirmingForce(false)}
-        title="Force plan change?"
+        title={t('changePlan.forceConfirm.title')}
       >
         <p className="text-sm text-ink-soft">
-          The hotel&apos;s current usage exceeds the target plan&apos;s limits.
-          Forcing the change puts the hotel over its new limits immediately —
-          the override is audit-logged.
+          {t('changePlan.forceConfirm.body')}
         </p>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setConfirmingForce(false)}>
-            Back
+            {tCommon('actions.back')}
           </Button>
           <Button variant="danger" loading={saving} onClick={() => submit(true)}>
-            Force change
+            {t('changePlan.forceConfirm.submit')}
           </Button>
         </div>
       </Modal>

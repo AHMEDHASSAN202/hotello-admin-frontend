@@ -1,12 +1,16 @@
 'use client';
 
 import { Check, Copy } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
 /** Copies a value to the clipboard with a brief visual confirmation. */
 export function CopyButton({ value, label }: { value: string; label?: string }) {
+  const t = useTranslations('hotels');
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>();
+
+  const fallbackLabel = label ?? t('copy.copy');
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -25,8 +29,8 @@ export function CopyButton({ value, label }: { value: string; label?: string }) 
     <button
       type="button"
       onClick={handleCopy}
-      aria-label={label ?? 'Copy to clipboard'}
-      title={label ?? 'Copy to clipboard'}
+      aria-label={fallbackLabel}
+      title={fallbackLabel}
       className="inline-flex items-center gap-1 rounded p-1.5 text-ink-soft transition-colors hover:text-ink"
     >
       {copied ? (

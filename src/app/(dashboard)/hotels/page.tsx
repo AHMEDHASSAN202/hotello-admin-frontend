@@ -1,11 +1,23 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
-import { Badge, Button, EmptyState, ErrorState } from '@/components/ui';
+import {
+  Badge,
+  Bdi,
+  Button,
+  Code,
+  EmptyState,
+  ErrorState,
+  Pagination,
+  selectClass,
+} from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
+import { useFormatters } from '@/i18n/use-format';
 import { useMe } from '@/lib/use-me';
 import {
   HotelListItem,
@@ -30,12 +42,12 @@ const SUBSCRIPTION_STATUS_TONE = {
 } as const;
 
 const SORT_OPTIONS = [
-  { value: 'createdAt:desc', label: 'Newest first' },
-  { value: 'createdAt:asc', label: 'Oldest first' },
-  { value: 'name:asc', label: 'Name A→Z' },
-  { value: 'name:desc', label: 'Name Z→A' },
-  { value: 'plan:asc', label: 'Plan A→Z' },
-  { value: 'plan:desc', label: 'Plan Z→A' },
+  { value: 'createdAt:desc', labelKey: 'newest' },
+  { value: 'createdAt:asc', labelKey: 'oldest' },
+  { value: 'name:asc', labelKey: 'nameAsc' },
+  { value: 'name:desc', labelKey: 'nameDesc' },
+  { value: 'plan:asc', labelKey: 'planAsc' },
+  { value: 'plan:desc', labelKey: 'planDesc' },
 ] as const;
 
 const PAGE_SIZE = 20;
@@ -55,6 +67,10 @@ const EMPTY_FILTERS: Filters = {
 };
 
 export default function HotelsPage() {
+  const t = useTranslations('hotels');
+  const tCommon = useTranslations('common');
+  const resolveError = useApiError();
+  const { formatDate } = useFormatters();
   const router = useRouter();
   const { hasPermission } = useMe();
 
@@ -92,11 +108,11 @@ export default function HotelsPage() {
 
       setResult(await api<Paginated<HotelListItem>>(`/hotels?${params}`));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load hotels');
+      setError(err instanceof ApiError ? resolveError(err) : t('loadError'));
     } finally {
       setLoading(false);
     }
-  }, [query, filters, sort, page]);
+  }, [query, filters, sort, page, resolveError, t]);
 
   useEffect(() => {
     load();
@@ -117,27 +133,23 @@ export default function HotelsPage() {
 
   const hotels = result?.data ?? null;
   const total = result?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const hasQueryOrFilters =
     query !== '' || Object.values(filters).some((v) => v !== '');
-
-  const selectClass =
-    'rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink';
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-widest text-gold">
-            Tenants
+            {t('eyebrow')}
           </p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-ink">
-            Hotels
+            {t('title')}
           </h1>
         </div>
         {canCreate && (
           <Button onClick={() => router.push('/hotels/new')}>
-            <Plus size={16} aria-hidden /> Onboard hotel
+            <Plus size={16} aria-hidden /> {t('onboard')}
           </Button>
         )}
       </div>
@@ -154,39 +166,39 @@ export default function HotelsPage() {
           <div className="relative">
             <Search
               size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
+              className="absolute start-3 top-1/2 -translate-y-1/2 text-ink-soft/60"
               aria-hidden
             />
             <input
               type="search"
-              placeholder="Search name or slug…"
-              aria-label="Search hotels"
+              placeholder={t('list.search.placeholder')}
+              aria-label={t('list.search.aria')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-56 rounded-lg border border-line bg-white py-2 pl-9 pr-3 text-sm text-ink"
+              className="w-56 rounded-lg border border-line bg-white py-2 pe-3 ps-9 text-sm text-ink"
             />
           </div>
           <Button type="submit" variant="ghost">
-            Search
+            {tCommon('actions.search')}
           </Button>
         </form>
 
         <select
-          aria-label="Filter by hotel status"
+          aria-label={t('list.filters.statusAria')}
           value={filters.status}
           onChange={(e) =>
             updateFilters({ status: e.target.value as Filters['status'] })
           }
           className={selectClass}
         >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="suspended">Suspended</option>
-          <option value="inactive">Inactive</option>
+          <option value="">{t('list.filters.allStatuses')}</option>
+          <option value="active">{t('hotelStatus.active')}</option>
+          <option value="suspended">{t('hotelStatus.suspended')}</option>
+          <option value="inactive">{t('hotelStatus.inactive')}</option>
         </select>
 
         <select
-          aria-label="Filter by subscription status"
+          aria-label={t('list.filters.subscriptionAria')}
           value={filters.subscriptionStatus}
           onChange={(e) =>
             updateFilters({
@@ -196,22 +208,22 @@ export default function HotelsPage() {
           }
           className={selectClass}
         >
-          <option value="">All subscriptions</option>
-          <option value="active">Active</option>
-          <option value="trial">Trial</option>
-          <option value="past_due">Past due</option>
-          <option value="canceled">Canceled</option>
-          <option value="expired">Expired</option>
+          <option value="">{t('list.filters.allSubscriptions')}</option>
+          <option value="active">{t('subscriptionStatus.active')}</option>
+          <option value="trial">{t('subscriptionStatus.trial')}</option>
+          <option value="past_due">{t('subscriptionStatus.past_due')}</option>
+          <option value="canceled">{t('subscriptionStatus.canceled')}</option>
+          <option value="expired">{t('subscriptionStatus.expired')}</option>
         </select>
 
         {plans.length > 0 && (
           <select
-            aria-label="Filter by plan"
+            aria-label={t('list.filters.planAria')}
             value={filters.planId}
             onChange={(e) => updateFilters({ planId: e.target.value })}
             className={selectClass}
           >
-            <option value="">All plans</option>
+            <option value="">{t('list.filters.allPlans')}</option>
             {plans.map((plan) => (
               <option key={plan.id} value={plan.id}>
                 {plan.nameEn}
@@ -222,25 +234,25 @@ export default function HotelsPage() {
 
         <input
           type="text"
-          placeholder="City"
-          aria-label="Filter by city"
+          placeholder={t('list.filters.cityPlaceholder')}
+          aria-label={t('list.filters.cityAria')}
           value={filters.city}
           onChange={(e) => updateFilters({ city: e.target.value })}
           className="w-32 rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink"
         />
 
         <select
-          aria-label="Sort hotels"
+          aria-label={t('list.filters.sortAria')}
           value={sort}
           onChange={(e) => {
             setSort(e.target.value);
             setPage(1);
           }}
-          className={`${selectClass} ml-auto`}
+          className={`${selectClass} ms-auto`}
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
-              {opt.label}
+              {t(`list.sort.${opt.labelKey}`)}
             </option>
           ))}
         </select>
@@ -248,26 +260,28 @@ export default function HotelsPage() {
 
       <div className="mt-6">
         {loading ? (
-          <p className="text-sm text-ink-soft">Loading…</p>
+          <p className="text-sm text-ink-soft">{tCommon('states.loading')}</p>
         ) : error ? (
           <ErrorState message={error} onRetry={load} />
         ) : !hotels || hotels.length === 0 ? (
           <EmptyState
             title={
-              hasQueryOrFilters ? 'No hotels match your filters' : 'No hotels yet'
+              hasQueryOrFilters
+                ? t('list.empty.noMatchTitle')
+                : t('list.empty.emptyTitle')
             }
             hint={
               hasQueryOrFilters
-                ? 'Try different search terms or filters.'
+                ? t('list.empty.noMatchHint')
                 : canCreate
-                  ? 'Onboard the first hotel to start building the tenant base.'
-                  : 'Hotels appear here once they are onboarded.'
+                  ? t('list.empty.emptyHintCanCreate')
+                  : t('list.empty.emptyHint')
             }
             action={
               !hasQueryOrFilters &&
               canCreate && (
                 <Button onClick={() => router.push('/hotels/new')}>
-                  Onboard hotel
+                  {t('onboard')}
                 </Button>
               )
             }
@@ -275,16 +289,30 @@ export default function HotelsPage() {
         ) : (
           <>
             <div className="overflow-hidden rounded-xl border border-line bg-white">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-start text-sm">
                 <thead className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Hotel</th>
-                    <th className="px-4 py-3 font-medium">City</th>
-                    <th className="px-4 py-3 font-medium">Slug</th>
-                    <th className="px-4 py-3 font-medium">Plan</th>
-                    <th className="px-4 py-3 font-medium">Subscription</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">Onboarded</th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('list.table.hotel')}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('list.table.city')}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('list.table.slug')}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('list.table.plan')}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('list.table.subscription')}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('list.table.status')}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('list.table.onboarded')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -300,15 +328,17 @@ export default function HotelsPage() {
                           className="font-medium text-ink hover:underline"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {hotel.nameEn}
+                          {/* Latin hotel name — isolate in RTL (AC 7.3-5). */}
+                          <Bdi>{hotel.nameEn}</Bdi>
                         </Link>
                         <p className="text-xs text-ink-soft" dir="rtl">
                           {hotel.nameAr}
                         </p>
                       </td>
                       <td className="px-4 py-3 text-ink-soft">{hotel.city}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-ink-soft">
-                        {hotel.slug}
+                      <td className="px-4 py-3 text-xs text-ink-soft">
+                        {/* Slug is code-like — never reorders (AC 7.3-5). */}
+                        <Code>{hotel.slug}</Code>
                       </td>
                       <td className="px-4 py-3">
                         {hotel.plan ? (
@@ -318,12 +348,16 @@ export default function HotelsPage() {
                               hotel.subscription?.daysRemaining !== null &&
                               hotel.subscription?.daysRemaining !== undefined && (
                                 <Badge tone="gold">
-                                  {hotel.subscription.daysRemaining}d left
+                                  {t('list.daysLeft', {
+                                    count: hotel.subscription.daysRemaining,
+                                  })}
                                 </Badge>
                               )}
                           </div>
                         ) : (
-                          <span className="text-ink-soft/60">—</span>
+                          <span className="text-ink-soft/60">
+                            {tCommon('states.notAvailable')}
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -333,19 +367,23 @@ export default function HotelsPage() {
                               SUBSCRIPTION_STATUS_TONE[hotel.subscription.status]
                             }
                           >
-                            {hotel.subscription.status.replace('_', ' ')}
+                            {t(
+                              `subscriptionStatus.${hotel.subscription.status}`,
+                            )}
                           </Badge>
                         ) : (
-                          <span className="text-ink-soft/60">—</span>
+                          <span className="text-ink-soft/60">
+                            {tCommon('states.notAvailable')}
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <Badge tone={HOTEL_STATUS_TONE[hotel.status]}>
-                          {hotel.status}
+                          {t(`hotelStatus.${hotel.status}`)}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-ink-soft">
-                        {new Date(hotel.createdAt).toLocaleDateString()}
+                        {formatDate(hotel.createdAt)}
                       </td>
                     </tr>
                   ))}
@@ -353,30 +391,12 @@ export default function HotelsPage() {
               </table>
             </div>
 
-            {totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm text-ink-soft">
-                <p>
-                  {total} hotel{total === 1 ? '' : 's'} · page {page} of{' '}
-                  {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    <ChevronLeft size={15} aria-hidden /> Previous
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Next <ChevronRight size={15} aria-hidden />
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              total={total}
+              page={page}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+            />
           </>
         )}
       </div>

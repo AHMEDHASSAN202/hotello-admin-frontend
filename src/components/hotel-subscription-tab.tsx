@@ -1,11 +1,14 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { ChangePlanModal } from '@/components/change-plan-modal';
 import { Badge, Button, EmptyState, ErrorState } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
+import { useFormatters } from '@/i18n/use-format';
 import { useMe } from '@/lib/use-me';
-import { HotelSubscriptionView } from '@/lib/types';
+import { BillingCycle, HotelSubscriptionView } from '@/lib/types';
 
 const STATUS_TONE = {
   active: 'success',
@@ -15,16 +18,18 @@ const STATUS_TONE = {
   expired: 'danger',
 } as const;
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString();
-}
-
 /** Story 4.6 view, embedded as the hotel details Subscription tab (5.2 AC3). */
 export function HotelSubscriptionTab({ hotelId }: { hotelId: string }) {
+  const t = useTranslations('hotels');
+  const tCommon = useTranslations('common');
+  const resolveError = useApiError();
+  const { formatDate, formatNumber } = useFormatters();
   const { hasPermission } = useMe();
   const [view, setView] = useState<HotelSubscriptionView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [changing, setChanging] = useState(false);
+
+  const cycleLabel = (cycle: BillingCycle) => t(`billingCycleValue.${cycle}`);
 
   const load = useCallback(async () => {
     setError(null);
@@ -33,33 +38,38 @@ export function HotelSubscriptionTab({ hotelId }: { hotelId: string }) {
       setView(await api<HotelSubscriptionView>(`/hotels/${hotelId}/subscription`));
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : 'Failed to load subscription',
+        err instanceof ApiError
+          ? resolveError(err)
+          : t('subscription.loadError'),
       );
     }
-  }, [hotelId]);
+  }, [hotelId, resolveError, t]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   if (error) return <ErrorState message={error} onRetry={load} />;
-  if (view === null) return <p className="text-sm text-ink-soft">Loading…</p>;
+  if (view === null)
+    return <p className="text-sm text-ink-soft">{tCommon('states.loading')}</p>;
 
   const current = view.current;
   const canChange = hasPermission('subscriptions.update');
   const planName = current?.plan
     ? `${current.plan.nameEn}`
-    : (view.history[0]?.planNameEn ?? '—');
+    : (view.history[0]?.planNameEn ?? tCommon('states.notAvailable'));
 
   return (
     <div className="space-y-4">
       {current === null ? (
         <EmptyState
-          title="No subscription"
-          hint="This hotel has no current subscription record."
+          title={t('subscription.noSubscription')}
+          hint={t('subscription.noSubscriptionHint')}
           action={
             canChange && (
-              <Button onClick={() => setChanging(true)}>Assign plan</Button>
+              <Button onClick={() => setChanging(true)}>
+                {t('subscription.assignPlan')}
+              </Button>
             )
           }
         />
@@ -68,17 +78,18 @@ export function HotelSubscriptionTab({ hotelId }: { hotelId: string }) {
           <div className="flex items-start justify-between">
             <div>
               <h2 className="font-display font-semibold text-ink">
-                Current plan
+                {t('subscription.currentPlan')}
               </h2>
               <div className="mt-2 flex items-center gap-3">
                 <p className="text-lg font-medium text-ink">{planName}</p>
                 <Badge tone={STATUS_TONE[current.status]}>
-                  {current.status.replace('_', ' ')}
+                  {t(`subscriptionStatus.${current.status}`)}
                 </Badge>
                 {current.status === 'trial' && current.daysRemaining !== null && (
                   <span className="text-sm text-ink-soft">
-                    {current.daysRemaining} day
-                    {current.daysRemaining === 1 ? '' : 's'} remaining
+                    {t('subscription.daysRemaining', {
+                      count: current.daysRemaining,
+                    })}
                   </span>
                 )}
               </div>
@@ -88,13 +99,15 @@ export function HotelSubscriptionTab({ hotelId }: { hotelId: string }) {
                 </p>
               )}
               <p className="mt-2 text-sm text-ink-soft">
-                <span className="capitalize">{current.billingCycle}</span> billing
-                · since {formatDate(current.startDate)}
+                {t('subscription.billingSince', {
+                  cycle: cycleLabel(current.billingCycle),
+                  date: formatDate(current.startDate),
+                })}
               </p>
             </div>
             {canChange && (
               <Button variant="ghost" onClick={() => setChanging(true)}>
-                Change plan
+                {t('subscription.changePlan')}
               </Button>
             )}
           </div>
@@ -104,18 +117,26 @@ export function HotelSubscriptionTab({ hotelId }: { hotelId: string }) {
       {view.usage && view.usage.length > 0 && (
         <div className="rounded-xl border border-line bg-white p-5">
           <h2 className="font-display font-semibold text-ink">
-            Usage vs limits
+            {t('subscription.usageTitle')}
           </h2>
           <div className="mt-3 space-y-3">
-            {view.usage.map((row) => (
+            {view.usage.map((row) => {
+              const label = t.has(`subscription.usageLabel.${row.label}`)
+                ? t(`subscription.usageLabel.${row.label}`)
+                : row.label;
+              return (
               <div key={row.field}>
                 <div className="flex justify-between text-sm">
-                  <span className="capitalize text-ink-soft">{row.label}</span>
+                  <span className="text-ink-soft">{label}</span>
                   <span className="font-medium text-ink">
-                    {row.used.toLocaleString()}
                     {row.max === null
-                      ? ' · Unlimited'
-                      : ` / ${row.max.toLocaleString()}`}
+                      ? t('subscription.usageUnlimited', {
+                          used: formatNumber(row.used),
+                        })
+                      : t('subscription.usageOf', {
+                          used: formatNumber(row.used),
+                          max: formatNumber(row.max),
+                        })}
                   </span>
                 </div>
                 {row.pct !== null && (
@@ -125,7 +146,7 @@ export function HotelSubscriptionTab({ hotelId }: { hotelId: string }) {
                     aria-valuenow={Math.min(row.pct, 100)}
                     aria-valuemin={0}
                     aria-valuemax={100}
-                    aria-label={`${row.label} usage`}
+                    aria-label={t('subscription.usageAria', { label })}
                   >
                     <div
                       className={`h-full rounded-full ${
@@ -140,42 +161,55 @@ export function HotelSubscriptionTab({ hotelId }: { hotelId: string }) {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
       <div className="rounded-xl border border-line bg-white p-5">
-        <h2 className="font-display font-semibold text-ink">History</h2>
+        <h2 className="font-display font-semibold text-ink">
+          {t('subscription.history')}
+        </h2>
         {view.history.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-soft">No previous subscriptions.</p>
+          <p className="mt-3 text-sm text-ink-soft">
+            {t('subscription.noHistory')}
+          </p>
         ) : (
-          <table className="mt-3 w-full text-left text-sm">
+          <table className="mt-3 w-full text-start text-sm">
             <thead className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
               <tr>
-                <th className="py-2 pr-4 font-medium">Plan</th>
-                <th className="py-2 pr-4 font-medium">Cycle</th>
-                <th className="py-2 pr-4 font-medium">Status</th>
-                <th className="py-2 pr-4 font-medium">Period</th>
+                <th className="py-2 pe-4 font-medium">
+                  {t('subscription.historyTable.plan')}
+                </th>
+                <th className="py-2 pe-4 font-medium">
+                  {t('subscription.historyTable.cycle')}
+                </th>
+                <th className="py-2 pe-4 font-medium">
+                  {t('subscription.historyTable.status')}
+                </th>
+                <th className="py-2 pe-4 font-medium">
+                  {t('subscription.historyTable.period')}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {view.history.map((row) => (
                 <tr key={row.id}>
-                  <td className="py-2 pr-4 text-ink">
+                  <td className="py-2 pe-4 text-ink">
                     {row.planNameEn ?? row.planId}
                   </td>
-                  <td className="py-2 pr-4 capitalize text-ink-soft">
-                    {row.billingCycle}
+                  <td className="py-2 pe-4 text-ink-soft">
+                    {cycleLabel(row.billingCycle)}
                   </td>
-                  <td className="py-2 pr-4">
+                  <td className="py-2 pe-4">
                     <Badge tone={STATUS_TONE[row.status]}>
-                      {row.status.replace('_', ' ')}
+                      {t(`subscriptionStatus.${row.status}`)}
                     </Badge>
                   </td>
-                  <td className="py-2 pr-4 text-ink-soft">
+                  <td className="py-2 pe-4 text-ink-soft">
                     {formatDate(row.startDate)} →{' '}
-                    {row.endDate ? formatDate(row.endDate) : 'now'}
+                    {row.endDate ? formatDate(row.endDate) : t('subscription.now')}
                   </td>
                 </tr>
               ))}

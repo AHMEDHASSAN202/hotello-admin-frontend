@@ -20,8 +20,10 @@ const config: Config = {
         success: '#2F7D4F',
       },
       fontFamily: {
-        display: ['Sora', 'sans-serif'],
-        sans: ['"IBM Plex Sans"', 'sans-serif'],
+        // Arabic-capable fallbacks last: Latin glyphs resolve from the first
+        // family, Arabic glyphs fall through to the Arabic font.
+        display: ['Sora', '"Cairo"', 'sans-serif'],
+        sans: ['"IBM Plex Sans"', '"IBM Plex Sans Arabic"', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'monospace'],
       },
     },

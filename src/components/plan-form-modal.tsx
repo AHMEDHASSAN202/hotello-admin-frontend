@@ -1,13 +1,12 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { FormEvent, useEffect, useState } from 'react';
-import { Button, Field, Modal } from '@/components/ui';
+import { Bdi, Button, Code, Field, Modal } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
-import {
-  LimitViolation,
-  ModuleCatalogEntry,
-  PlanDetail,
-} from '@/lib/types';
+import { useApiError } from '@/lib/errors';
+import { useFormatters } from '@/i18n/use-format';
+import { LimitViolation, ModuleCatalogEntry, PlanDetail } from '@/lib/types';
 
 interface PlanFormState {
   nameEn: string;
@@ -42,9 +41,9 @@ const EMPTY_FORM: PlanFormState = {
 };
 
 const LIMIT_FIELDS = [
-  { key: 'maxRooms', label: 'Max rooms' },
-  { key: 'maxStaffUsers', label: 'Max staff users' },
-  { key: 'maxGuestRequestsPerMonth', label: 'Max guest requests / month' },
+  { key: 'maxRooms', labelKey: 'maxRooms' },
+  { key: 'maxStaffUsers', labelKey: 'maxStaffUsers' },
+  { key: 'maxGuestRequestsPerMonth', labelKey: 'maxGuestRequests' },
 ] as const;
 
 function toFormState(plan: PlanDetail): PlanFormState {
@@ -106,6 +105,11 @@ export function PlanFormModal({
   /** Null = create mode. */
   plan: PlanDetail | null;
 }) {
+  const t = useTranslations('plans');
+  const tCommon = useTranslations('common');
+  const resolveError = useApiError();
+  const { formatNumber } = useFormatters();
+
   const [form, setForm] = useState<PlanFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [violations, setViolations] = useState<LimitViolation[]>([]);
@@ -164,13 +168,15 @@ export function PlanFormModal({
       onClose();
     } catch (err) {
       if (err instanceof ApiError) {
-        setFormError(err.message);
-        const details = err.details as { violations?: LimitViolation[] } | undefined;
-        if (err.status === 409 && details?.violations) {
+        setFormError(resolveError(err));
+        const details = err.details as
+          | { violations?: LimitViolation[] }
+          | undefined;
+        if ((err.status === 409 || err.status === 422) && details?.violations) {
           setViolations(details.violations);
         }
       } else {
-        setFormError('Save failed');
+        setFormError(t('form.saveError'));
       }
       setConfirmingImpact(false);
     } finally {
@@ -181,7 +187,7 @@ export function PlanFormModal({
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (form.enabledModules.length === 0) {
-      setFormError('Select at least one module.');
+      setFormError(t('form.selectModule'));
       return;
     }
     if (impactRequiresConfirmation()) {
@@ -196,7 +202,7 @@ export function PlanFormModal({
       <Modal
         open={open && !confirmingImpact}
         onClose={onClose}
-        title={plan ? 'Edit plan' : 'New plan'}
+        title={plan ? t('form.editTitle') : t('form.createTitle')}
         wide
       >
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -210,8 +216,14 @@ export function PlanFormModal({
                 <ul className="mt-2 list-inside list-disc space-y-0.5">
                   {violations.map((v, i) => (
                     <li key={i}>
-                      <strong>{v.hotelName}</strong>: {v.field} — usage {v.usage},
-                      new limit {v.limit}
+                      {t.rich('form.violation', {
+                        usage: formatNumber(v.usage),
+                        limit: formatNumber(v.limit),
+                        name: () => (
+                          <Bdi className="font-medium">{v.hotelName}</Bdi>
+                        ),
+                        field: () => <Code>{v.field}</Code>,
+                      })}
                     </li>
                   ))}
                 </ul>
@@ -221,52 +233,58 @@ export function PlanFormModal({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field
-              label="Name (English)"
+              label={t('form.nameEn')}
               required
               value={form.nameEn}
               onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
             />
             <Field
-              label="Name (Arabic)"
+              label={t('form.nameAr')}
               required
               dir="rtl"
               value={form.nameAr}
               onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
             />
             <Field
-              label="Description (English)"
+              label={t('form.descriptionEn')}
               value={form.descriptionEn}
-              onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, descriptionEn: e.target.value })
+              }
             />
             <Field
-              label="Description (Arabic)"
+              label={t('form.descriptionAr')}
               dir="rtl"
               value={form.descriptionAr}
-              onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, descriptionAr: e.target.value })
+              }
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field
-              label="Monthly price"
+              label={t('form.monthlyPrice')}
               required
               type="number"
               min={0}
               step="0.01"
               value={form.monthlyPrice}
-              onChange={(e) => setForm({ ...form, monthlyPrice: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, monthlyPrice: e.target.value })
+              }
             />
             <Field
-              label="Yearly price"
+              label={t('form.yearlyPrice')}
               type="number"
               min={0}
               step="0.01"
-              hint="Leave empty to disable yearly billing."
+              hint={t('form.yearlyHint')}
               value={form.yearlyPrice}
               onChange={(e) => setForm({ ...form, yearlyPrice: e.target.value })}
             />
             <Field
-              label="Currency"
+              label={t('form.currency')}
               required
               value={form.currency}
               onChange={(e) => setForm({ ...form, currency: e.target.value })}
@@ -274,15 +292,17 @@ export function PlanFormModal({
           </div>
 
           <fieldset>
-            <legend className="mb-2 text-sm font-medium text-ink">Limits</legend>
+            <legend className="mb-2 text-sm font-medium text-ink">
+              {t('form.limitsLegend')}
+            </legend>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {LIMIT_FIELDS.map(({ key, label }) => (
+              {LIMIT_FIELDS.map(({ key, labelKey }) => (
                 <Field
                   key={key}
-                  label={label}
+                  label={t(`form.${labelKey}`)}
                   type="number"
                   min={1}
-                  hint="Empty = unlimited."
+                  hint={t('form.limitHint')}
                   value={form[key]}
                   onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                 />
@@ -292,7 +312,7 @@ export function PlanFormModal({
 
           <fieldset>
             <legend className="mb-2 text-sm font-medium text-ink">
-              Enabled modules
+              {t('form.modulesLegend')}
             </legend>
             <div className="flex flex-wrap gap-1.5">
               {catalog.map((mod) => {
@@ -323,16 +343,16 @@ export function PlanFormModal({
                 checked={form.isTrial}
                 onChange={(e) => setForm({ ...form, isTrial: e.target.checked })}
               />
-              Trial plan
+              {t('form.trial')}
             </label>
             {form.isTrial && (
               <div className="mt-3 max-w-xs">
                 <Field
-                  label="Trial duration (days)"
+                  label={t('form.trialDuration')}
                   required
                   type="number"
                   min={1}
-                  hint="Applies to new trials only — running trials keep their end date."
+                  hint={t('form.trialHint')}
                   value={form.trialDurationDays}
                   onChange={(e) =>
                     setForm({ ...form, trialDurationDays: e.target.value })
@@ -344,10 +364,10 @@ export function PlanFormModal({
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
+              {tCommon('actions.cancel')}
             </Button>
             <Button type="submit" loading={saving}>
-              {plan ? 'Save changes' : 'Create plan'}
+              {plan ? t('form.saveSubmit') : t('form.createSubmit')}
             </Button>
           </div>
         </form>
@@ -357,23 +377,20 @@ export function PlanFormModal({
       <Modal
         open={open && confirmingImpact}
         onClose={() => setConfirmingImpact(false)}
-        title="Apply changes to subscribed hotels?"
+        title={t('impactDialog.title')}
       >
         <p className="text-sm text-ink-soft">
-          Changing limits or modules affects{' '}
-          <strong className="text-ink">
-            {plan?.subscriberCount} subscribed hotel
-            {plan?.subscriberCount === 1 ? '' : 's'}
-          </strong>{' '}
-          immediately on save. Modules that are disabled become unavailable in
-          those hotels&apos; dashboards.
+          {t.rich('impactDialog.body', {
+            count: plan?.subscriberCount ?? 0,
+            strong: (chunks) => <strong className="text-ink">{chunks}</strong>,
+          })}
         </p>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setConfirmingImpact(false)}>
-            Back
+            {tCommon('actions.back')}
           </Button>
           <Button loading={saving} onClick={submit}>
-            Apply changes
+            {t('impactDialog.apply')}
           </Button>
         </div>
       </Modal>

@@ -1,0 +1,17 @@
+{
+  "eyebrow": "Overview",
+  "welcome": "Welcome back",
+  "welcomeNamed": "Welcome back, <bdi>{name}</bdi>",
+  "subtitle": "Here is the current state of platform administration.",
+  "loadError": "We couldn't load the overview.",
+  "cards": {
+    "admins": {
+      "label": "Admins",
+      "hint": "Accounts with dashboard access"
+    },
+    "roles": {
+      "label": "Roles",
+      "hint": "Permission sets in use"
+    }
+  }
+}

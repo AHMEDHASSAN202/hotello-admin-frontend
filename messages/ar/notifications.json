@@ -1,0 +1,77 @@
+{
+  "eyebrow": "المنصة",
+  "title": "الإشعارات",
+  "subtitle": "كل رسالة بريد إلكتروني أرسلتها المنصة أو حاولت إرسالها.",
+  "loadError": "تعذّر تحميل سجل الإشعارات.",
+  "detailLoadError": "تعذّر تحميل هذا الإشعار.",
+  "list": {
+    "search": {
+      "placeholder": "ابحث عن المستلم…",
+      "aria": "البحث حسب المستلم"
+    }
+  },
+  "filters": {
+    "statusAria": "التصفية حسب الحالة",
+    "allStatuses": "كل الحالات",
+    "typeAria": "التصفية حسب النوع",
+    "allTypes": "كل الأنواع",
+    "from": "من",
+    "fromAria": "تاريخ البداية",
+    "to": "إلى",
+    "toAria": "تاريخ النهاية"
+  },
+  "empty": {
+    "noMatchTitle": "لا توجد إشعارات مطابقة لعوامل التصفية",
+    "noMatchHint": "جرّب مصطلحات بحث أو عوامل تصفية مختلفة.",
+    "emptyTitle": "لا توجد إشعارات بعد",
+    "emptyHint": "تظهر رسائل البريد الإلكتروني هنا عند إرسال المنصة لها."
+  },
+  "table": {
+    "date": "التاريخ",
+    "type": "النوع",
+    "recipient": "المستلم",
+    "hotel": "الفندق",
+    "channel": "القناة",
+    "language": "اللغة",
+    "status": "الحالة",
+    "resend": "إعادة إرسال"
+  },
+  "types": {
+    "owner_setup_link": "رابط إعداد المالك",
+    "trial_countdown": "العد التنازلي للتجربة",
+    "trial_expired": "انتهت الفترة التجريبية",
+    "hotel_suspended": "تم إيقاف الفندق",
+    "hotel_reactivated": "تمت إعادة تفعيل الفندق"
+  },
+  "status": {
+    "pending": "قيد الانتظار",
+    "sent": "مُرسَل",
+    "failed": "فشل"
+  },
+  "attempts": "{count, plural, zero {لا محاولات} one {محاولة واحدة} two {محاولتان} few {# محاولات} many {# محاولة} other {# محاولة}}",
+  "statusWithAttempts": "{status} · {attempts}",
+  "detail": {
+    "fallbackTitle": "إشعار",
+    "toLabel": "إلى:",
+    "hotelLabel": "الفندق:",
+    "subject": "الموضوع",
+    "bodyPreview": "معاينة المحتوى",
+    "bodyPreviewTitle": "معاينة محتوى البريد الإلكتروني",
+    "noBody": "لا يوجد محتوى مُهيّأ — فشل هذا الإشعار قبل تهيئة المحتوى.",
+    "timeline": "المخطط الزمني للتسليم",
+    "noAttempts": "لا توجد محاولات بعد.",
+    "delivered": "تم التسليم",
+    "failed": "فشل",
+    "failedWithError": "فشل — {error}"
+  },
+  "resend": {
+    "resentSetupLink": "تمت إعادة الإرسال — أُنشئ رابط إعداد جديد، والرابط السابق أصبح غير صالح الآن.",
+    "resentGeneric": "تمت إعادة الإرسال كإشعار جديد.",
+    "confirmSetupLink": "يؤدي هذا إلى إنشاء رابط إعداد جديد وإبطال الرابط السابق فورًا. يُرسَل الرابط الجديد إلى المالك عبر البريد الإلكتروني.",
+    "confirmGeneric": "يؤدي هذا إلى إرسال نسخة جديدة من هذا البريد الإلكتروني إلى {email}.",
+    "regenerateAction": "إعادة الإنشاء والإرسال",
+    "resendAction": "إعادة الإرسال",
+    "confirmRegenerate": "تأكيد — إعادة الإنشاء والإرسال",
+    "confirmResend": "تأكيد إعادة الإرسال"
+  }
+}

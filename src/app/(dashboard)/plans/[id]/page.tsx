@@ -1,39 +1,60 @@
 'use client';
 
-import { Archive, ArchiveRestore, ArrowLeft, Check, Pencil, X } from 'lucide-react';
+import {
+  Archive,
+  ArchiveRestore,
+  ArrowLeft,
+  Check,
+  Pencil,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { PlanFormModal } from '@/components/plan-form-modal';
-import { Badge, Button, EmptyState, ErrorState, Modal } from '@/components/ui';
+import {
+  Badge,
+  Bdi,
+  Button,
+  EmptyState,
+  ErrorState,
+  Modal,
+} from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
+import { useFormatters } from '@/i18n/use-format';
 import { useMe } from '@/lib/use-me';
 import {
   ModuleCatalogEntry,
   PlanDetail,
   PlanSubscriber,
+  SubscriptionStatus,
 } from '@/lib/types';
 
 const LIMIT_ROWS = [
-  { key: 'maxRooms', label: 'Rooms' },
-  { key: 'maxStaffUsers', label: 'Staff users' },
-  { key: 'maxGuestRequestsPerMonth', label: 'Guest requests / month' },
+  { key: 'maxRooms', labelKey: 'rooms' },
+  { key: 'maxStaffUsers', labelKey: 'staffUsers' },
+  { key: 'maxGuestRequestsPerMonth', labelKey: 'guestRequests' },
 ] as const;
 
-const SUBSCRIBER_STATUS_TONE = {
+const SUBSCRIBER_STATUS_TONE: Record<
+  SubscriptionStatus,
+  'success' | 'gold' | 'warning' | 'neutral' | 'danger'
+> = {
   active: 'success',
   trial: 'gold',
   past_due: 'warning',
   canceled: 'neutral',
   expired: 'danger',
-} as const;
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString();
-}
+};
 
 export default function PlanDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const t = useTranslations('plans');
+  const tCommon = useTranslations('common');
+  const resolveError = useApiError();
+  const { formatCurrency, formatDate, formatNumber } = useFormatters();
   const { hasPermission } = useMe();
 
   const [plan, setPlan] = useState<PlanDetail | null>(null);
@@ -48,7 +69,9 @@ export default function PlanDetailPage() {
   const [editing, setEditing] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSubscriberCount, setActionSubscriberCount] = useState<number | null>(null);
+  const [actionSubscriberCount, setActionSubscriberCount] = useState<
+    number | null
+  >(null);
   const [saving, setSaving] = useState(false);
 
   const canReadSubscribers = hasPermission('subscriptions.read');
@@ -64,11 +87,13 @@ export default function PlanDetailPage() {
       setPlan(planRes);
       setCatalog(catalogRes);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load plan');
+      setError(
+        err instanceof ApiError ? resolveError(err) : t('details.loadError'),
+      );
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, resolveError, t]);
 
   const loadSubscribers = useCallback(async () => {
     setSubscribersError(null);
@@ -77,10 +102,10 @@ export default function PlanDetailPage() {
       setSubscribers(await api<PlanSubscriber[]>(`/plans/${id}/subscribers`));
     } catch (err) {
       setSubscribersError(
-        err instanceof ApiError ? err.message : 'Failed to load subscribers',
+        err instanceof ApiError ? resolveError(err) : t('subscribers.loadError'),
       );
     }
-  }, [id]);
+  }, [id, resolveError, t]);
 
   useEffect(() => {
     load();
@@ -102,22 +127,23 @@ export default function PlanDetailPage() {
       await load();
     } catch (err) {
       if (err instanceof ApiError) {
-        setActionError(err.message);
+        setActionError(resolveError(err));
         const details = err.details as { subscriberCount?: number } | undefined;
         if (err.status === 409 && details?.subscriberCount !== undefined) {
           setActionSubscriberCount(details.subscriberCount);
         }
       } else {
-        setActionError('Action failed');
+        setActionError(t('archiveDialog.actionError'));
       }
     } finally {
       setSaving(false);
     }
   }
 
-  if (loading) return <p className="text-sm text-ink-soft">Loading…</p>;
+  if (loading)
+    return <p className="text-sm text-ink-soft">{tCommon('states.loading')}</p>;
   if (error) return <ErrorState message={error} onRetry={load} />;
-  if (!plan) return <ErrorState message="Plan not found" />;
+  if (!plan) return <ErrorState message={t('details.notFound')} />;
 
   const isActive = plan.status === 'active';
 
@@ -127,26 +153,28 @@ export default function PlanDetailPage() {
         href="/plans"
         className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-ink"
       >
-        <ArrowLeft size={15} aria-hidden /> All plans
+        {/* Directional chevron mirrors in RTL (AC 7.3-4). */}
+        <ArrowLeft size={15} aria-hidden className="rtl:-scale-x-100" />{' '}
+        {t('details.back')}
       </Link>
 
       <div className="mt-3 flex items-start justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-widest text-gold">
-            Billing
+            {t('eyebrow')}
           </p>
           <div className="mt-1 flex items-center gap-3">
             <h1 className="font-display text-2xl font-semibold text-ink">
               {plan.nameEn}
             </h1>
             {isActive ? (
-              <Badge tone="success">Active</Badge>
+              <Badge tone="success">{t('status.active')}</Badge>
             ) : (
-              <Badge tone="neutral">Archived</Badge>
+              <Badge tone="neutral">{t('status.archived')}</Badge>
             )}
             {plan.isTrial && (
               <Badge tone="gold">
-                {plan.trialDurationDays}-day trial · تجربة
+                {t('trialBadge', { days: plan.trialDurationDays ?? 0 })}
               </Badge>
             )}
           </div>
@@ -157,7 +185,7 @@ export default function PlanDetailPage() {
         <div className="flex gap-2">
           {hasPermission('plans.update') && (
             <Button variant="ghost" onClick={() => setEditing(true)}>
-              <Pencil size={15} aria-hidden /> Edit
+              <Pencil size={15} aria-hidden /> {t('details.actions.edit')}
             </Button>
           )}
           {isActive
@@ -170,7 +198,8 @@ export default function PlanDetailPage() {
                     setArchiving(true);
                   }}
                 >
-                  <Archive size={15} aria-hidden /> Archive
+                  <Archive size={15} aria-hidden />{' '}
+                  {t('details.actions.archive')}
                 </Button>
               )
             : hasPermission('plans.update') && (
@@ -181,21 +210,24 @@ export default function PlanDetailPage() {
                     setArchiving(true);
                   }}
                 >
-                  <ArchiveRestore size={15} aria-hidden /> Restore
+                  <ArchiveRestore size={15} aria-hidden />{' '}
+                  {t('details.actions.restore')}
                 </Button>
               )}
         </div>
       </div>
 
-      <div className="mt-6 flex gap-1 rounded-lg border border-line bg-white p-1 text-sm w-fit">
+      <div className="mt-6 flex w-fit gap-1 rounded-lg border border-line bg-white p-1 text-sm">
         <button
           onClick={() => setTab('overview')}
           aria-pressed={tab === 'overview'}
           className={`rounded-md px-3 py-1.5 transition-colors ${
-            tab === 'overview' ? 'bg-ink text-white' : 'text-ink-soft hover:text-ink'
+            tab === 'overview'
+              ? 'bg-ink text-white'
+              : 'text-ink-soft hover:text-ink'
           }`}
         >
-          Overview
+          {t('details.tabs.overview')}
         </button>
         {canReadSubscribers && (
           <button
@@ -207,7 +239,9 @@ export default function PlanDetailPage() {
                 : 'text-ink-soft hover:text-ink'
             }`}
           >
-            Subscribed hotels ({plan.subscriberCount})
+            {t('details.tabs.subscribers', {
+              count: formatNumber(plan.subscriberCount),
+            })}
           </button>
         )}
       </div>
@@ -215,20 +249,24 @@ export default function PlanDetailPage() {
       {tab === 'overview' ? (
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div className="rounded-xl border border-line bg-white p-5">
-            <h2 className="font-display font-semibold text-ink">Pricing</h2>
+            <h2 className="font-display font-semibold text-ink">
+              {t('details.pricing.title')}
+            </h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-ink-soft">Monthly</dt>
+                <dt className="text-ink-soft">
+                  {t('details.pricing.monthly')}
+                </dt>
                 <dd className="font-medium text-ink">
-                  {plan.monthlyPrice.toLocaleString()} {plan.currency}
+                  {formatCurrency(plan.monthlyPrice, plan.currency)}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-soft">Yearly</dt>
+                <dt className="text-ink-soft">{t('details.pricing.yearly')}</dt>
                 <dd className="font-medium text-ink">
                   {plan.yearlyPrice === null
-                    ? 'Unavailable'
-                    : `${plan.yearlyPrice.toLocaleString()} ${plan.currency}`}
+                    ? t('details.pricing.yearlyUnavailable')
+                    : formatCurrency(plan.yearlyPrice, plan.currency)}
                 </dd>
               </div>
             </dl>
@@ -245,13 +283,19 @@ export default function PlanDetailPage() {
           </div>
 
           <div className="rounded-xl border border-line bg-white p-5">
-            <h2 className="font-display font-semibold text-ink">Limits</h2>
+            <h2 className="font-display font-semibold text-ink">
+              {t('details.limits.title')}
+            </h2>
             <dl className="mt-3 space-y-2 text-sm">
-              {LIMIT_ROWS.map(({ key, label }) => (
+              {LIMIT_ROWS.map(({ key, labelKey }) => (
                 <div key={key} className="flex justify-between">
-                  <dt className="text-ink-soft">{label}</dt>
+                  <dt className="text-ink-soft">
+                    {t(`details.limits.${labelKey}`)}
+                  </dt>
                   <dd className="font-medium text-ink">
-                    {plan[key] === null ? 'Unlimited' : plan[key]?.toLocaleString()}
+                    {plan[key] === null
+                      ? t('details.limits.unlimited')
+                      : formatNumber(plan[key] as number)}
                   </dd>
                 </div>
               ))}
@@ -259,7 +303,9 @@ export default function PlanDetailPage() {
           </div>
 
           <div className="rounded-xl border border-line bg-white p-5">
-            <h2 className="font-display font-semibold text-ink">Modules</h2>
+            <h2 className="font-display font-semibold text-ink">
+              {t('details.modules.title')}
+            </h2>
             <ul className="mt-3 space-y-2 text-sm">
               {catalog.map((mod) => {
                 const enabled = plan.enabledModules.includes(mod.key);
@@ -280,21 +326,33 @@ export default function PlanDetailPage() {
           </div>
 
           <div className="rounded-xl border border-line bg-white p-5">
-            <h2 className="font-display font-semibold text-ink">Audit</h2>
+            <h2 className="font-display font-semibold text-ink">
+              {t('details.audit.title')}
+            </h2>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-ink-soft">Created by</dt>
+                <dt className="text-ink-soft">
+                  {t('details.audit.createdBy')}
+                </dt>
                 <dd className="font-medium text-ink">
-                  {plan.createdBy?.name ?? '—'}
+                  {plan.createdBy?.name ?? tCommon('states.notAvailable')}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-soft">Created at</dt>
-                <dd className="font-medium text-ink">{formatDate(plan.createdAt)}</dd>
+                <dt className="text-ink-soft">
+                  {t('details.audit.createdAt')}
+                </dt>
+                <dd className="font-medium text-ink">
+                  {formatDate(plan.createdAt)}
+                </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-soft">Last updated</dt>
-                <dd className="font-medium text-ink">{formatDate(plan.updatedAt)}</dd>
+                <dt className="text-ink-soft">
+                  {t('details.audit.updatedAt')}
+                </dt>
+                <dd className="font-medium text-ink">
+                  {formatDate(plan.updatedAt)}
+                </dd>
               </div>
             </dl>
           </div>
@@ -304,46 +362,62 @@ export default function PlanDetailPage() {
           {subscribersError ? (
             <ErrorState message={subscribersError} onRetry={loadSubscribers} />
           ) : subscribers === null ? (
-            <p className="text-sm text-ink-soft">Loading…</p>
+            <p className="text-sm text-ink-soft">{tCommon('states.loading')}</p>
           ) : subscribers.length === 0 ? (
             <EmptyState
-              title="No subscribed hotels"
-              hint="Hotels appear here once they are put on this plan."
+              title={t('subscribers.emptyTitle')}
+              hint={t('subscribers.emptyHint')}
             />
           ) : (
             <div className="overflow-hidden rounded-xl border border-line bg-white">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-start text-sm">
                 <thead className="border-b border-line bg-paper text-xs uppercase tracking-wide text-ink-soft">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Hotel</th>
-                    <th className="px-4 py-3 font-medium">Since</th>
-                    <th className="px-4 py-3 font-medium">Billing cycle</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('subscribers.table.hotel')}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('subscribers.table.since')}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('subscribers.table.billingCycle')}
+                    </th>
+                    <th className="px-4 py-3 font-medium">
+                      {t('subscribers.table.status')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
                   {subscribers.map((sub) => (
                     <tr key={sub.hotelId}>
                       <td className="px-4 py-3 font-medium text-ink">
-                        {sub.hotelName ?? sub.hotelId}
+                        {sub.hotelName ? (
+                          <Bdi>{sub.hotelName}</Bdi>
+                        ) : (
+                          <Bdi className="font-mono text-xs text-ink-soft">
+                            {sub.hotelId}
+                          </Bdi>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-ink-soft">
                         {formatDate(sub.startDate)}
                       </td>
-                      <td className="px-4 py-3 capitalize text-ink-soft">
-                        {sub.billingCycle}
+                      <td className="px-4 py-3 text-ink-soft">
+                        {t(`subscribers.billingCycle.${sub.billingCycle}`)}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Badge tone={SUBSCRIBER_STATUS_TONE[sub.status]}>
-                            {sub.status.replace('_', ' ')}
+                            {t(`subscribers.status.${sub.status}`)}
                           </Badge>
-                          {sub.status === 'trial' && sub.daysRemaining !== null && (
-                            <span className="text-xs text-ink-soft">
-                              {sub.daysRemaining} day
-                              {sub.daysRemaining === 1 ? '' : 's'} remaining
-                            </span>
-                          )}
+                          {sub.status === 'trial' &&
+                            sub.daysRemaining !== null && (
+                              <span className="text-xs text-ink-soft">
+                                {t('subscribers.daysRemaining', {
+                                  count: sub.daysRemaining,
+                                })}
+                              </span>
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -367,7 +441,11 @@ export default function PlanDetailPage() {
       <Modal
         open={archiving}
         onClose={() => setArchiving(false)}
-        title={isActive ? 'Archive plan?' : 'Restore plan?'}
+        title={
+          isActive
+            ? t('archiveDialog.archiveTitle')
+            : t('archiveDialog.restoreTitle')
+        }
       >
         {actionError && (
           <div
@@ -377,36 +455,34 @@ export default function PlanDetailPage() {
             <p>{actionError}</p>
             {actionSubscriberCount !== null && (
               <p className="mt-1">
-                Migrate the {actionSubscriberCount} subscribed hotel
-                {actionSubscriberCount === 1 ? '' : 's'} to another plan first.
+                {t('archiveDialog.migrateHint', {
+                  count: actionSubscriberCount,
+                })}
               </p>
             )}
           </div>
         )}
         <p className="text-sm text-ink-soft">
-          {isActive ? (
-            <>
-              <strong className="text-ink">{plan.nameEn}</strong> stops being
-              offered — it disappears from plan-selection dropdowns but stays in
-              historical records. There is no delete; archiving is reversible.
-            </>
-          ) : (
-            <>
-              <strong className="text-ink">{plan.nameEn}</strong> becomes
-              selectable again for new subscriptions.
-            </>
+          {t.rich(
+            isActive ? 'archiveDialog.archiveBody' : 'archiveDialog.restoreBody',
+            {
+              name: plan.nameEn,
+              strong: (chunks) => <strong className="text-ink">{chunks}</strong>,
+            },
           )}
         </p>
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setArchiving(false)}>
-            Cancel
+            {tCommon('actions.cancel')}
           </Button>
           <Button
             variant={isActive ? 'danger' : 'primary'}
             loading={saving}
             onClick={handleArchiveToggle}
           >
-            {isActive ? 'Archive plan' : 'Restore plan'}
+            {isActive
+              ? t('archiveDialog.archiveConfirm')
+              : t('archiveDialog.restoreConfirm')}
           </Button>
         </div>
       </Modal>

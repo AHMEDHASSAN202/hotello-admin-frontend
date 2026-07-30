@@ -1,14 +1,20 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { Badge, Button, ErrorState, Field } from '@/components/ui';
+import { Badge, Bdi, Button, Code, ErrorState, Field } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
 import { tokenStore } from '@/lib/auth';
 import { MeResponse } from '@/lib/types';
 
 export default function ProfilePage() {
+  const t = useTranslations('profile');
+  const tCommon = useTranslations('common');
+  const resolveError = useApiError();
   const router = useRouter();
+
   const [me, setMe] = useState<MeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,11 +42,11 @@ export default function ProfilePage() {
       setName(res.name);
       setEmail(res.email);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load profile');
+      setError(err instanceof ApiError ? resolveError(err) : t('loadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [resolveError, t]);
 
   useEffect(() => {
     load();
@@ -61,7 +67,7 @@ export default function ProfilePage() {
       setEmail(updated.email);
       setProfileSaved(true);
     } catch (err) {
-      setProfileError(err instanceof ApiError ? err.message : 'Save failed');
+      setProfileError(resolveError(err));
     } finally {
       setSavingProfile(false);
     }
@@ -71,7 +77,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setPasswordError(null);
     if (newPassword !== confirmPassword) {
-      setPasswordError('New password and confirmation do not match');
+      setPasswordError(t('password.mismatch'));
       return;
     }
     setSavingPassword(true);
@@ -84,23 +90,23 @@ export default function ProfilePage() {
       tokenStore.clear();
       router.push('/login');
     } catch (err) {
-      setPasswordError(
-        err instanceof ApiError ? err.message : 'Password change failed',
-      );
+      setPasswordError(resolveError(err));
       setSavingPassword(false);
     }
   }
 
-  if (loading) return <p className="text-sm text-ink-soft">Loading…</p>;
-  if (error || !me) return <ErrorState message={error ?? 'Not found'} onRetry={load} />;
+  if (loading)
+    return <p className="text-sm text-ink-soft">{tCommon('states.loading')}</p>;
+  if (error || !me)
+    return <ErrorState message={error ?? t('notFound')} onRetry={load} />;
 
   return (
     <div>
       <p className="text-xs font-medium uppercase tracking-widest text-gold">
-        Account
+        {t('eyebrow')}
       </p>
       <h1 className="mt-1 font-display text-2xl font-semibold text-ink">
-        My profile
+        {t('title')}
       </h1>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -109,7 +115,9 @@ export default function ProfilePage() {
           onSubmit={handleProfileSave}
           className="space-y-4 rounded-xl border border-line bg-white p-6"
         >
-          <h2 className="font-display font-semibold text-ink">Details</h2>
+          <h2 className="font-display font-semibold text-ink">
+            {t('details.heading')}
+          </h2>
 
           {profileError && (
             <div
@@ -124,18 +132,18 @@ export default function ProfilePage() {
               role="status"
               className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success"
             >
-              Profile updated.
+              {t('details.saved')}
             </div>
           )}
 
           <Field
-            label="Name"
+            label={t('details.name')}
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
           <Field
-            label="Email"
+            label={t('details.email')}
             type="email"
             required
             value={email}
@@ -143,7 +151,9 @@ export default function ProfilePage() {
           />
 
           <div className="border-t border-line pt-4">
-            <p className="mb-2 text-sm font-medium text-ink">Role</p>
+            <p className="mb-2 text-sm font-medium text-ink">
+              {t('details.role')}
+            </p>
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge
                 tone={me.role.permissions.includes('*') ? 'gold' : 'neutral'}
@@ -151,14 +161,14 @@ export default function ProfilePage() {
                 {me.role.name}
               </Badge>
               {me.role.permissions.includes('*') ? (
-                <Badge tone="gold">Full access (*)</Badge>
+                <Badge tone="gold">{t('details.fullAccess')}</Badge>
               ) : (
                 me.role.permissions.map((p) => (
                   <span
                     key={p}
-                    className="rounded-full border border-line bg-paper px-2 py-0.5 font-mono text-xs text-ink-soft"
+                    className="rounded-full border border-line bg-paper px-2 py-0.5 text-xs text-ink-soft"
                   >
-                    {p}
+                    <Code>{p}</Code>
                   </span>
                 ))
               )}
@@ -167,7 +177,7 @@ export default function ProfilePage() {
 
           <div className="flex justify-end">
             <Button type="submit" loading={savingProfile}>
-              Save changes
+              {t('details.save')}
             </Button>
           </div>
         </form>
@@ -178,12 +188,9 @@ export default function ProfilePage() {
           className="h-fit space-y-4 rounded-xl border border-line bg-white p-6"
         >
           <h2 className="font-display font-semibold text-ink">
-            Change password
+            {t('password.heading')}
           </h2>
-          <p className="text-xs text-ink-soft">
-            After changing your password every session is signed out and you
-            will need to sign in again.
-          </p>
+          <p className="text-xs text-ink-soft">{t('password.notice')}</p>
 
           {passwordError && (
             <div
@@ -195,7 +202,7 @@ export default function ProfilePage() {
           )}
 
           <Field
-            label="Current password"
+            label={t('password.current')}
             type="password"
             autoComplete="current-password"
             required
@@ -203,16 +210,16 @@ export default function ProfilePage() {
             onChange={(e) => setCurrentPassword(e.target.value)}
           />
           <Field
-            label="New password"
+            label={t('password.new')}
             type="password"
             autoComplete="new-password"
             required
-            hint="Min 8 characters with at least one letter and one number."
+            hint={t('password.newHint')}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
           />
           <Field
-            label="Confirm new password"
+            label={t('password.confirm')}
             type="password"
             autoComplete="new-password"
             required
@@ -222,7 +229,7 @@ export default function ProfilePage() {
 
           <div className="flex justify-end">
             <Button type="submit" variant="danger" loading={savingPassword}>
-              Change password
+              {t('password.submit')}
             </Button>
           </div>
         </form>

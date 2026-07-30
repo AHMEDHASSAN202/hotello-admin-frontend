@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Account",
+  "title": "My profile",
+  "loadError": "We couldn't load your profile.",
+  "notFound": "Profile not found.",
+  "details": {
+    "heading": "Details",
+    "saved": "Profile updated.",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "fullAccess": "Full access (*)",
+    "save": "Save changes"
+  },
+  "password": {
+    "heading": "Change password",
+    "notice": "After changing your password every session is signed out and you will need to sign in again.",
+    "mismatch": "New password and confirmation do not match.",
+    "current": "Current password",
+    "new": "New password",
+    "newHint": "Min 8 characters with at least one letter and one number.",
+    "confirm": "Confirm new password",
+    "submit": "Change password"
+  }
+}

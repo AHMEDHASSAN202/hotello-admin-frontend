@@ -1,0 +1,53 @@
+{
+  "eyebrow": "Access",
+  "title": "Admins",
+  "new": "New admin",
+  "loadError": "We couldn't load the admins list.",
+  "search": {
+    "placeholder": "Search name or email…",
+    "aria": "Search admins"
+  },
+  "empty": {
+    "noMatchTitle": "No admins match your search",
+    "noMatchHint": "Try a different name or email.",
+    "emptyTitle": "No admins yet",
+    "emptyHint": "Create the first admin account to get started."
+  },
+  "table": {
+    "admin": "Admin",
+    "role": "Role",
+    "status": "Status",
+    "lastLogin": "Last login",
+    "actions": "Actions"
+  },
+  "status": {
+    "active": "Active",
+    "deactivated": "Deactivated"
+  },
+  "lastLogin": {
+    "never": "Never"
+  },
+  "row": {
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "editAria": "Edit {name}",
+    "deleteAria": "Delete {name}"
+  },
+  "form": {
+    "createTitle": "New admin",
+    "editTitle": "Edit admin",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "passwordHintCreate": "Min 8 characters with at least one letter and one number.",
+    "passwordHintEdit": "Leave empty to keep the current password.",
+    "role": "Role",
+    "createSubmit": "Create admin",
+    "saveSubmit": "Save changes"
+  },
+  "delete": {
+    "title": "Delete admin?",
+    "body": "This permanently removes <strong>{name}</strong> (<mail>{email}</mail>). If you only want to revoke access, consider deactivating the account instead — that preserves history.",
+    "confirm": "Delete permanently"
+  }
+}

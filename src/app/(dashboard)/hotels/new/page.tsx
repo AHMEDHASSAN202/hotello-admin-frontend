@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
   ChangeEvent,
   ReactNode,
@@ -19,8 +20,11 @@ import {
   useState,
 } from 'react';
 import { CopyButton } from '@/components/copy-button';
-import { Badge, Button, ErrorState, Field } from '@/components/ui';
+import { SetupEmailStatus } from '@/components/setup-email-status';
+import { Badge, Bdi, Button, Code, ErrorState, Field } from '@/components/ui';
 import { api, ApiError, apiUpload } from '@/lib/api';
+import { useApiError } from '@/lib/errors';
+import { useFormatters } from '@/i18n/use-format';
 import {
   LimitViolation,
   OnboardHotelResponse,
@@ -38,7 +42,9 @@ const RESERVED_SLUGS = new Set([
 const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'];
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 
-const STEPS = ['Profile', 'Plan', 'Owner'] as const;
+const STEP_KEYS = ['profile', 'plan', 'owner'] as const;
+
+type SlugProblem = { kind: 'invalid' } | { kind: 'reserved'; slug: string };
 
 type SlugCheck =
   | { state: 'idle' }
@@ -86,15 +92,17 @@ function slugify(value: string): string {
     .slice(0, 40);
 }
 
-function slugProblem(slug: string): string | null {
-  if (!SLUG_REGEX.test(slug)) {
-    return 'Lowercase letters, numbers and hyphens; 3–40 characters; no leading/trailing hyphen.';
-  }
-  if (RESERVED_SLUGS.has(slug)) return `"${slug}" is a reserved word.`;
+function slugProblem(slug: string): SlugProblem | null {
+  if (!SLUG_REGEX.test(slug)) return { kind: 'invalid' };
+  if (RESERVED_SLUGS.has(slug)) return { kind: 'reserved', slug };
   return null;
 }
 
 export default function OnboardHotelPage() {
+  const t = useTranslations('hotels');
+  const tCommon = useTranslations('common');
+  const resolveError = useApiError();
+  const { formatCurrency, formatDateTime } = useFormatters();
   const router = useRouter();
 
   const [step, setStep] = useState(0);
@@ -122,6 +130,15 @@ export default function OnboardHotelPage() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<OnboardHotelResponse | null>(null);
 
+  /** Localizes a client-side slug problem into a Field error message. */
+  const slugProblemMessage = useCallback(
+    (problem: SlugProblem): string =>
+      problem.kind === 'invalid'
+        ? t('onboarding.slug.invalid')
+        : t('onboarding.slug.reserved', { slug: problem.slug }),
+    [t],
+  );
+
   const loadPlans = useCallback(async () => {
     setPlansError(null);
     try {
@@ -132,10 +149,12 @@ export default function OnboardHotelPage() {
       setPlanId((current) => current || (trial?.id ?? active[0]?.id ?? ''));
     } catch (err) {
       setPlansError(
-        err instanceof ApiError ? err.message : 'Failed to load plans',
+        err instanceof ApiError
+          ? resolveError(err)
+          : t('onboarding.plansLoadError'),
       );
     }
-  }, []);
+  }, [resolveError, t]);
 
   useEffect(() => {
     loadPlans();
@@ -175,7 +194,7 @@ export default function OnboardHotelPage() {
     clearTimeout(slugTimer.current);
     const problem = slugProblem(slug);
     if (problem) {
-      setSlugCheck({ state: 'unavailable', message: problem });
+      setSlugCheck({ state: 'unavailable', message: slugProblemMessage(problem) });
       return;
     }
     setSlugCheck({ state: 'checking' });
@@ -186,11 +205,17 @@ export default function OnboardHotelPage() {
         );
         if (res.available) setSlugCheck({ state: 'available' });
         else if (res.reason === 'taken') {
-          setSlugCheck({ state: 'unavailable', message: 'Already taken.' });
+          setSlugCheck({ state: 'unavailable', message: t('onboarding.slug.taken') });
         } else if (res.reason === 'reserved') {
-          setSlugCheck({ state: 'unavailable', message: 'Reserved word.' });
+          setSlugCheck({
+            state: 'unavailable',
+            message: t('onboarding.slug.reservedShort'),
+          });
         } else {
-          setSlugCheck({ state: 'unavailable', message: 'Invalid slug.' });
+          setSlugCheck({
+            state: 'unavailable',
+            message: t('onboarding.slug.invalidShort'),
+          });
         }
       } catch {
         // Availability is re-checked on submit — do not block the wizard.
@@ -207,11 +232,11 @@ export default function OnboardHotelPage() {
       return;
     }
     if (!LOGO_TYPES.includes(file.type)) {
-      setLogoError('Logo must be PNG, JPG, WebP or SVG.');
+      setLogoError(t('onboarding.profileStep.logoInvalidType'));
       return;
     }
     if (file.size > LOGO_MAX_BYTES) {
-      setLogoError('Logo must be 2MB or smaller.');
+      setLogoError(t('onboarding.profileStep.logoTooLarge'));
       return;
     }
     setLogoFile(file);
@@ -273,12 +298,8 @@ export default function OnboardHotelPage() {
         form.append('file', logoFile);
         try {
           await apiUpload(`/hotels/${created.hotel.id}/logo`, form);
-        } catch (err) {
-          setLogoUploadWarning(
-            err instanceof ApiError
-              ? `Hotel created, but the logo upload failed: ${err.message}`
-              : 'Hotel created, but the logo upload failed.',
-          );
+        } catch {
+          setLogoUploadWarning(t('onboarding.success.logoWarning'));
         }
       }
       setResult(created);
@@ -290,20 +311,20 @@ export default function OnboardHotelPage() {
         if (err.status === 422 && details?.field === 'owner.email') {
           // Story 5.6 AC2 — inline on step 3 without losing entered data.
           setStep(2);
-          setOwnerEmailError(err.message);
+          setOwnerEmailError(resolveError(err));
         } else if (err.status === 409 && details?.violations?.length) {
           setStep(1);
           setViolations(details.violations);
-          setSubmitError(err.message);
+          setSubmitError(resolveError(err));
         } else if (err.status === 409) {
           setStep(0);
-          setSlugCheck({ state: 'unavailable', message: 'Already taken.' });
-          setSubmitError(err.message);
+          setSlugCheck({ state: 'unavailable', message: t('onboarding.slug.taken') });
+          setSubmitError(resolveError(err));
         } else {
-          setSubmitError(err.message);
+          setSubmitError(resolveError(err));
         }
       } else {
-        setSubmitError('Onboarding failed');
+        setSubmitError(t('onboarding.submitError'));
       }
     } finally {
       setSubmitting(false);
@@ -319,15 +340,21 @@ export default function OnboardHotelPage() {
             <CheckCircle2 size={28} className="text-success" aria-hidden />
             <div>
               <h1 className="font-display text-xl font-semibold text-ink">
-                Hotel onboarded
+                {t('onboarding.success.title')}
               </h1>
               <p className="text-sm text-ink-soft">
-                {result.hotel.nameEn} ·{' '}
-                <span dir="rtl">{result.hotel.nameAr}</span> is live on the{' '}
                 {result.subscription.status === 'trial'
-                  ? `trial (${result.subscription.daysRemaining} days remaining)`
-                  : 'platform'}
-                .
+                  ? t.rich('onboarding.success.liveTrial', {
+                      nameEn: () => <Bdi>{result.hotel.nameEn}</Bdi>,
+                      nameAr: () => <span dir="rtl">{result.hotel.nameAr}</span>,
+                      days: t('subscription.daysRemaining', {
+                        count: result.subscription.daysRemaining ?? 0,
+                      }),
+                    })
+                  : t.rich('onboarding.success.livePlatform', {
+                      nameEn: () => <Bdi>{result.hotel.nameEn}</Bdi>,
+                      nameAr: () => <span dir="rtl">{result.hotel.nameAr}</span>,
+                    })}
               </p>
             </div>
           </div>
@@ -338,39 +365,53 @@ export default function OnboardHotelPage() {
               className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700"
             >
               <TriangleAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
-              {logoUploadWarning} You can retry from the hotel profile.
+              {logoUploadWarning}
             </div>
           )}
 
           <div className="mt-6 space-y-3">
-            <UrlRow label="Tenant dashboard" value={result.hotel.urls.tenantDashboard} />
-            <UrlRow label="Guest app" value={result.hotel.urls.guestApp} />
+            <UrlRow
+              label={t('onboarding.success.tenantDashboard')}
+              value={result.hotel.urls.tenantDashboard}
+            />
+            <UrlRow
+              label={t('onboarding.success.guestApp')}
+              value={result.hotel.urls.guestApp}
+            />
           </div>
 
           <div className="mt-6 rounded-lg border border-gold/40 bg-gold-soft p-4">
             <p className="text-sm font-medium text-ink">
-              Owner setup link — shown only once
+              {t('onboarding.success.setupLinkTitle')}
             </p>
             <p className="mt-1 text-xs text-ink-soft">
-              Share it with {result.owner.name} ({result.owner.email}) so they
-              can set their password. It expires{' '}
-              {new Date(result.owner.setupLinkExpiresAt).toLocaleString()} and
-              cannot be viewed again — only regenerated.
+              {t.rich('onboarding.success.setupLinkHint', {
+                name: () => <Bdi>{result.owner.name}</Bdi>,
+                email: () => <Bdi>{result.owner.email}</Bdi>,
+                expires: formatDateTime(result.owner.setupLinkExpiresAt),
+              })}
             </p>
             <div className="mt-3 flex items-center gap-2 rounded-lg border border-line bg-white px-3 py-2">
-              <code className="flex-1 truncate font-mono text-xs text-ink">
+              <Code className="flex-1 truncate text-xs text-ink">
                 {result.owner.setupLink}
-              </code>
-              <CopyButton value={result.owner.setupLink} label="Copy setup link" />
+              </Code>
+              <CopyButton
+                value={result.owner.setupLink}
+                label={t('onboarding.success.copySetupLink')}
+              />
+            </div>
+            {/* Story 6.4 AC3 — the email is sent automatically; status here. */}
+            <div className="mt-3">
+              <SetupEmailStatus hotelId={result.hotel.id} />
             </div>
           </div>
 
           <div className="mt-8 flex justify-end gap-2">
             <Button variant="ghost" onClick={() => router.push('/hotels')}>
-              All hotels
+              {t('onboarding.success.allHotels')}
             </Button>
             <Button onClick={() => router.push(`/hotels/${result.hotel.id}`)}>
-              Go to hotel
+              {t('onboarding.success.goToHotel')}
             </Button>
           </div>
         </div>
@@ -385,25 +426,30 @@ export default function OnboardHotelPage() {
         href="/hotels"
         className="inline-flex items-center gap-1 text-sm text-ink-soft hover:text-ink"
       >
-        <ArrowLeft size={15} aria-hidden /> All hotels
+        {/* "Back to hotels" link — directional (AC 7.3-4). */}
+        <ArrowLeft size={15} aria-hidden className="rtl:-scale-x-100" />{' '}
+        {t('onboarding.backToHotels')}
       </Link>
 
       <div className="mt-3">
         <p className="text-xs font-medium uppercase tracking-widest text-gold">
-          Tenants
+          {t('onboarding.eyebrow')}
         </p>
         <h1 className="mt-1 font-display text-2xl font-semibold text-ink">
-          Onboard hotel
+          {t('onboarding.title')}
         </h1>
       </div>
 
-      {/* Stepper */}
-      <ol className="mt-6 flex items-center gap-2" aria-label="Onboarding steps">
-        {STEPS.map((label, i) => {
+      {/* Stepper — logical utilities let it flip RTL (AC 7.3-4). */}
+      <ol
+        className="mt-6 flex items-center gap-2"
+        aria-label={t('onboarding.stepperAria')}
+      >
+        {STEP_KEYS.map((key, i) => {
           const done = i < step;
           const current = i === step;
           return (
-            <li key={label} className="flex items-center gap-2">
+            <li key={key} className="flex items-center gap-2">
               {i > 0 && <span className="h-px w-8 bg-line" aria-hidden />}
               <span
                 aria-current={current ? 'step' : undefined}
@@ -420,7 +466,7 @@ export default function OnboardHotelPage() {
                 ) : (
                   <span className="text-xs">{i + 1}</span>
                 )}
-                {label}
+                {t(`onboarding.steps.${key}`)}
               </span>
             </li>
           );
@@ -441,13 +487,13 @@ export default function OnboardHotelPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field
-                label="Name (English)"
+                label={t('onboarding.profileStep.nameEn')}
                 required
                 value={profile.nameEn}
                 onChange={(e) => handleNameEnChange(e.target.value)}
               />
               <Field
-                label="Name (Arabic)"
+                label={t('onboarding.profileStep.nameAr')}
                 required
                 dir="rtl"
                 value={profile.nameAr}
@@ -457,11 +503,11 @@ export default function OnboardHotelPage() {
 
             <div>
               <Field
-                label="Slug"
+                label={t('onboarding.profileStep.slug')}
                 required
                 value={profile.slug}
                 onChange={(e) => handleSlugChange(e.target.value)}
-                hint="Lowercase kebab-case. Drives the tenant URLs and cannot be changed later."
+                hint={t('onboarding.profileStep.slugHint')}
                 error={
                   slugCheck.state === 'unavailable' ? slugCheck.message : undefined
                 }
@@ -469,49 +515,49 @@ export default function OnboardHotelPage() {
               {slugCheck.state === 'checking' && (
                 <p className="mt-1 flex items-center gap-1 text-xs text-ink-soft">
                   <Loader2 size={12} className="animate-spin" aria-hidden />
-                  Checking availability…
+                  {t('onboarding.slug.checking')}
                 </p>
               )}
               {slugCheck.state === 'available' && (
                 <p className="mt-1 flex items-center gap-1 text-xs text-success">
-                  <Check size={12} aria-hidden /> Available
+                  <Check size={12} aria-hidden /> {t('onboarding.slug.available')}
                 </p>
               )}
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field
-                label="Contact email"
+                label={t('onboarding.profileStep.contactEmail')}
                 type="email"
                 required
                 value={profile.contactEmail}
                 onChange={(e) => updateProfile({ contactEmail: e.target.value })}
               />
               <Field
-                label="Contact phone"
+                label={t('onboarding.profileStep.contactPhone')}
                 required
                 value={profile.contactPhone}
                 onChange={(e) => updateProfile({ contactPhone: e.target.value })}
               />
               <Field
-                label="City"
+                label={t('onboarding.profileStep.city')}
                 required
                 value={profile.city}
                 onChange={(e) => updateProfile({ city: e.target.value })}
               />
               <Field
-                label="Country"
+                label={t('onboarding.profileStep.country')}
                 value={profile.country}
                 onChange={(e) => updateProfile({ country: e.target.value })}
               />
               <Field
-                label="Timezone"
+                label={t('onboarding.profileStep.timezone')}
                 value={profile.timezone}
                 onChange={(e) => updateProfile({ timezone: e.target.value })}
               />
               <label className="block">
                 <span className="mb-1 block text-sm font-medium text-ink">
-                  Default language
+                  {t('onboarding.profileStep.defaultLanguage')}
                 </span>
                 <select
                   value={profile.defaultLanguage}
@@ -522,25 +568,34 @@ export default function OnboardHotelPage() {
                   }
                   className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink"
                 >
-                  <option value="ar">Arabic (العربية)</option>
-                  <option value="en">English</option>
+                  <option value="ar">
+                    {t('onboarding.profileStep.languageArabic')}
+                  </option>
+                  <option value="en">
+                    {t('onboarding.profileStep.languageEnglish')}
+                  </option>
                 </select>
               </label>
               <Field
-                label="Currency"
+                label={t('onboarding.profileStep.currency')}
                 value={profile.currency}
                 onChange={(e) => updateProfile({ currency: e.target.value })}
               />
               <label className="block">
                 <span className="mb-1 block text-sm font-medium text-ink">
-                  Star rating <span className="text-ink-soft">(optional)</span>
+                  {t('onboarding.profileStep.starRating')}{' '}
+                  <span className="text-ink-soft">
+                    {t('onboarding.profileStep.optional')}
+                  </span>
                 </span>
                 <select
                   value={profile.starRating}
                   onChange={(e) => updateProfile({ starRating: e.target.value })}
                   className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink"
                 >
-                  <option value="">Not rated</option>
+                  <option value="">
+                    {t('onboarding.profileStep.notRated')}
+                  </option>
                   {[1, 2, 3, 4, 5].map((n) => (
                     <option key={n} value={n}>
                       {'★'.repeat(n)}
@@ -549,31 +604,34 @@ export default function OnboardHotelPage() {
                 </select>
               </label>
               <Field
-                label="Rooms count (optional)"
+                label={t('onboarding.profileStep.roomsCount')}
                 type="number"
                 min={0}
                 value={profile.roomsCount}
                 onChange={(e) => updateProfile({ roomsCount: e.target.value })}
-                hint="Compared against the plan's room limit."
+                hint={t('onboarding.profileStep.roomsHint')}
               />
             </div>
 
             <Field
-              label="Address (optional)"
+              label={t('onboarding.profileStep.address')}
               value={profile.address}
               onChange={(e) => updateProfile({ address: e.target.value })}
             />
 
             <div>
               <span className="mb-1 block text-sm font-medium text-ink">
-                Logo <span className="text-ink-soft">(optional)</span>
+                {t('onboarding.profileStep.logo')}{' '}
+                <span className="text-ink-soft">
+                  {t('onboarding.profileStep.optional')}
+                </span>
               </span>
               <div className="flex items-center gap-3">
                 {logoPreview && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={logoPreview}
-                    alt="Logo preview"
+                    alt={t('onboarding.profileStep.logoPreviewAlt')}
                     className="h-12 w-12 rounded-lg border border-line object-cover"
                   />
                 )}
@@ -581,13 +639,12 @@ export default function OnboardHotelPage() {
                   type="file"
                   accept={LOGO_TYPES.join(',')}
                   onChange={handleLogoChange}
-                  aria-label="Hotel logo"
-                  className="text-sm text-ink-soft file:mr-3 file:rounded-lg file:border file:border-line file:bg-white file:px-3 file:py-1.5 file:text-sm file:text-ink"
+                  aria-label={t('onboarding.profileStep.logoAria')}
+                  className="text-sm text-ink-soft file:me-3 file:rounded-lg file:border file:border-line file:bg-white file:px-3 file:py-1.5 file:text-sm file:text-ink"
                 />
               </div>
               <p className="mt-1 text-xs text-ink-soft">
-                PNG, JPG, WebP or SVG — up to 2MB. Uploaded after the hotel is
-                created.
+                {t('onboarding.profileStep.logoHint')}
               </p>
               {logoError && (
                 <p className="mt-1 text-xs text-danger">{logoError}</p>
@@ -600,7 +657,9 @@ export default function OnboardHotelPage() {
           (plansError ? (
             <ErrorState message={plansError} onRetry={loadPlans} />
           ) : plans === null ? (
-            <p className="text-sm text-ink-soft">Loading plans…</p>
+            <p className="text-sm text-ink-soft">
+              {t('onboarding.planStep.loading')}
+            </p>
           ) : (
             <div className="space-y-4">
               {violations.length > 0 && (
@@ -608,10 +667,17 @@ export default function OnboardHotelPage() {
                   role="alert"
                   className="rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger"
                 >
-                  <p>The selected plan cannot fit this hotel:</p>
+                  <p>{t('onboarding.planStep.violationsTitle')}</p>
                   <ul className="mt-1 list-inside list-disc">
                     {violations.map((v, i) => (
-                      <li key={i}>{v.message ?? `${v.field}: ${v.usage} > ${v.limit}`}</li>
+                      <li key={i}>
+                        {v.message ??
+                          t('onboarding.planStep.violationLine', {
+                            field: v.field,
+                            usage: v.usage,
+                            limit: v.limit,
+                          })}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -628,7 +694,7 @@ export default function OnboardHotelPage() {
                         setViolations([]);
                       }}
                       aria-pressed={selected}
-                      className={`rounded-xl border p-4 text-left transition-colors ${
+                      className={`rounded-xl border p-4 text-start transition-colors ${
                         selected
                           ? 'border-ink bg-ink/5 ring-1 ring-ink'
                           : 'border-line bg-white hover:border-ink/40'
@@ -638,7 +704,9 @@ export default function OnboardHotelPage() {
                         <p className="font-medium text-ink">{plan.nameEn}</p>
                         {plan.isTrial && (
                           <Badge tone="gold">
-                            {plan.trialDurationDays}-day trial
+                            {t('onboarding.planStep.trialBadge', {
+                              count: plan.trialDurationDays ?? 0,
+                            })}
                           </Badge>
                         )}
                       </div>
@@ -647,12 +715,22 @@ export default function OnboardHotelPage() {
                       </p>
                       <p className="mt-2 text-sm text-ink">
                         {plan.isTrial
-                          ? 'Free'
-                          : `${plan.monthlyPrice.toLocaleString()} ${plan.currency}/mo`}
+                          ? t('onboarding.planStep.free')
+                          : t('onboarding.planStep.perMonth', {
+                              price: formatCurrency(
+                                plan.monthlyPrice,
+                                plan.currency,
+                              ),
+                            })}
                         {!plan.isTrial && plan.yearlyPrice !== null && (
                           <span className="text-ink-soft">
-                            {' '}
-                            · {plan.yearlyPrice.toLocaleString()} {plan.currency}/yr
+                            {' · '}
+                            {t('onboarding.planStep.perYear', {
+                              price: formatCurrency(
+                                plan.yearlyPrice,
+                                plan.currency,
+                              ),
+                            })}
                           </span>
                         )}
                       </p>
@@ -664,7 +742,7 @@ export default function OnboardHotelPage() {
               {selectedPlan && !selectedPlan.isTrial && (
                 <fieldset>
                   <legend className="mb-1 text-sm font-medium text-ink">
-                    Billing cycle
+                    {t('onboarding.planStep.billingCycle')}
                   </legend>
                   <div className="flex gap-4 text-sm text-ink">
                     <label className="flex items-center gap-2">
@@ -674,7 +752,7 @@ export default function OnboardHotelPage() {
                         checked={billingCycle === 'monthly'}
                         onChange={() => setBillingCycle('monthly')}
                       />
-                      Monthly
+                      {t('onboarding.planStep.monthly')}
                     </label>
                     <label
                       className={`flex items-center gap-2 ${
@@ -688,8 +766,9 @@ export default function OnboardHotelPage() {
                         checked={billingCycle === 'yearly'}
                         onChange={() => setBillingCycle('yearly')}
                       />
-                      Yearly
-                      {selectedPlan.yearlyPrice === null && ' (unavailable)'}
+                      {selectedPlan.yearlyPrice === null
+                        ? t('onboarding.planStep.yearlyUnavailable')
+                        : t('onboarding.planStep.yearly')}
                     </label>
                   </div>
                 </fieldset>
@@ -700,13 +779,13 @@ export default function OnboardHotelPage() {
         {step === 2 && (
           <div className="space-y-4">
             <Field
-              label="Owner name"
+              label={t('onboarding.ownerStep.name')}
               required
               value={ownerName}
               onChange={(e) => setOwnerName(e.target.value)}
             />
             <Field
-              label="Owner email"
+              label={t('onboarding.ownerStep.email')}
               type="email"
               required
               value={ownerEmail}
@@ -715,12 +794,10 @@ export default function OnboardHotelPage() {
                 setOwnerEmailError(null);
               }}
               error={ownerEmailError ?? undefined}
-              hint="The owner gets full control of this hotel's dashboard."
+              hint={t('onboarding.ownerStep.emailHint')}
             />
             <p className="rounded-lg bg-paper px-4 py-3 text-xs text-ink-soft">
-              A one-time setup link is generated on completion. It is shown only
-              once — copy it and share it with the hotel so the owner can set
-              their password.
+              {t('onboarding.ownerStep.note')}
             </p>
           </div>
         )}
@@ -732,11 +809,14 @@ export default function OnboardHotelPage() {
           disabled={step === 0 || submitting}
           onClick={() => setStep((s) => s - 1)}
         >
-          <ArrowLeft size={15} aria-hidden /> Back
+          {/* Directional back button (AC 7.3-4). */}
+          <ArrowLeft size={15} aria-hidden className="rtl:-scale-x-100" />{' '}
+          {t('onboarding.nav.back')}
         </Button>
-        {step < STEPS.length - 1 ? (
+        {step < STEP_KEYS.length - 1 ? (
           <Button disabled={!stepComplete[step]} onClick={() => setStep((s) => s + 1)}>
-            Next <ArrowRight size={15} aria-hidden />
+            {t('onboarding.nav.next')}{' '}
+            <ArrowRight size={15} aria-hidden className="rtl:-scale-x-100" />
           </Button>
         ) : (
           <Button
@@ -744,7 +824,7 @@ export default function OnboardHotelPage() {
             loading={submitting}
             onClick={handleSubmit}
           >
-            Onboard hotel
+            {t('onboard')}
           </Button>
         )}
       </div>
@@ -753,13 +833,14 @@ export default function OnboardHotelPage() {
 }
 
 function UrlRow({ label, value }: { label: string; value: string }): ReactNode {
+  const t = useTranslations('hotels');
   return (
     <div className="flex items-center gap-2 rounded-lg border border-line bg-paper px-3 py-2">
       <span className="w-36 shrink-0 text-xs font-medium uppercase tracking-wide text-ink-soft">
         {label}
       </span>
-      <code className="flex-1 truncate font-mono text-xs text-ink">{value}</code>
-      <CopyButton value={value} label={`Copy ${label.toLowerCase()} URL`} />
+      <Code className="flex-1 truncate text-xs text-ink">{value}</Code>
+      <CopyButton value={value} label={t('copy.copyUrl', { label })} />
     </div>
   );
 }

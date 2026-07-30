@@ -33,6 +33,8 @@ export interface Paginated<T> {
 /** Grouped by module, e.g. { admins: ['admins.read', ...], roles: [...] } */
 export type PermissionCatalog = Record<string, string[]>;
 
+export type PreferredLanguage = 'en' | 'ar';
+
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
@@ -40,6 +42,7 @@ export interface LoginResponse {
     id: string;
     name: string;
     email: string;
+    preferredLanguage: PreferredLanguage;
     role: RoleRef;
   };
 }
@@ -49,6 +52,7 @@ export interface MeResponse {
   name: string;
   email: string;
   isActive: boolean;
+  preferredLanguage: PreferredLanguage;
   role: RoleRef;
 }
 
@@ -221,6 +225,52 @@ export interface OnboardHotelResponse {
 export interface RegenerateLinkResponse {
   setupLink: string;
   expiresAt: string;
+}
+
+/* -------------------------------------------------------- Notifications */
+
+export type NotificationStatus = 'pending' | 'sent' | 'failed';
+
+export type NotificationType =
+  | 'owner_setup_link'
+  | 'trial_countdown'
+  | 'trial_expired'
+  | 'hotel_suspended'
+  | 'hotel_reactivated';
+
+export interface NotificationHotelRef {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+}
+
+export interface NotificationListItem {
+  id: string;
+  createdAt: string;
+  type: NotificationType;
+  channel: string;
+  language: 'ar' | 'en';
+  recipientName: string;
+  recipientEmail: string;
+  status: NotificationStatus;
+  attemptCount: number;
+  sentAt: string | null;
+  resendOfId: string | null;
+  hotel: NotificationHotelRef | null;
+}
+
+export interface NotificationAttempt {
+  at: string;
+  ok: boolean;
+  error: string | null;
+}
+
+export interface NotificationDetail extends NotificationListItem {
+  /** Rendered at queue time; setup-link tokens arrive masked. */
+  subject: string;
+  bodyHtml: string;
+  lastError: string | null;
+  attempts: NotificationAttempt[];
 }
 
 /** Response of GET /hotels/:id/subscription (Story 4.6 view). */

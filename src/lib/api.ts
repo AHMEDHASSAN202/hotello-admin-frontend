@@ -14,6 +14,11 @@ export class ApiError extends Error {
     message: string,
     /** Parsed error body — e.g. 409 payloads carry `violations` details. */
     public readonly details?: unknown,
+    /**
+     * Stable machine-readable error code (Epic 07, Story 7.4 AC3). The frontend
+     * maps this to a translated string so raw English never leaks into the UI.
+     */
+    public readonly code?: string,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -48,12 +53,14 @@ function tryRefresh(): Promise<boolean> {
 
 async function parseError(
   res: Response,
-): Promise<{ message: string; details?: unknown }> {
+): Promise<{ message: string; details?: unknown; code?: string }> {
   try {
     const body = await res.json();
+    const code = typeof body?.code === 'string' ? body.code : undefined;
     const message = body?.message;
-    if (Array.isArray(message)) return { message: message.join('. '), details: body };
-    if (typeof message === 'string') return { message, details: body };
+    if (Array.isArray(message))
+      return { message: message.join('. '), details: body, code };
+    if (typeof message === 'string') return { message, details: body, code };
   } catch {
     // fall through
   }
@@ -86,12 +93,12 @@ export async function api<T>(
     }
     tokenStore.clear();
     window.location.href = '/login';
-    throw new ApiError(401, 'Session expired');
+    throw new ApiError(401, 'Session expired', undefined, 'SESSION_EXPIRED');
   }
 
   if (!res.ok) {
-    const { message, details } = await parseError(res);
-    throw new ApiError(res.status, message, details);
+    const { message, details, code } = await parseError(res);
+    throw new ApiError(res.status, message, details, code);
   }
   if (res.status === 204) return undefined as T;
   return res.json();
@@ -119,12 +126,12 @@ export async function apiUpload<T>(
     }
     tokenStore.clear();
     window.location.href = '/login';
-    throw new ApiError(401, 'Session expired');
+    throw new ApiError(401, 'Session expired', undefined, 'SESSION_EXPIRED');
   }
 
   if (!res.ok) {
-    const { message, details } = await parseError(res);
-    throw new ApiError(res.status, message, details);
+    const { message, details, code } = await parseError(res);
+    throw new ApiError(res.status, message, details, code);
   }
   if (res.status === 204) return undefined as T;
   return res.json();

@@ -1,0 +1,77 @@
+{
+  "eyebrow": "Platform",
+  "title": "Notifications",
+  "subtitle": "Every email the platform has sent or attempted.",
+  "loadError": "We couldn't load the notifications log.",
+  "detailLoadError": "We couldn't load this notification.",
+  "list": {
+    "search": {
+      "placeholder": "Search recipient…",
+      "aria": "Search by recipient"
+    }
+  },
+  "filters": {
+    "statusAria": "Filter by status",
+    "allStatuses": "All statuses",
+    "typeAria": "Filter by type",
+    "allTypes": "All types",
+    "from": "From",
+    "fromAria": "From date",
+    "to": "To",
+    "toAria": "To date"
+  },
+  "empty": {
+    "noMatchTitle": "No notifications match your filters",
+    "noMatchHint": "Try different search terms or filters.",
+    "emptyTitle": "No notifications yet",
+    "emptyHint": "Emails appear here as the platform sends them."
+  },
+  "table": {
+    "date": "Date",
+    "type": "Type",
+    "recipient": "Recipient",
+    "hotel": "Hotel",
+    "channel": "Channel",
+    "language": "Language",
+    "status": "Status",
+    "resend": "resend"
+  },
+  "types": {
+    "owner_setup_link": "Owner setup link",
+    "trial_countdown": "Trial countdown",
+    "trial_expired": "Trial expired",
+    "hotel_suspended": "Hotel suspended",
+    "hotel_reactivated": "Hotel reactivated"
+  },
+  "status": {
+    "pending": "Pending",
+    "sent": "Sent",
+    "failed": "Failed"
+  },
+  "attempts": "{count, plural, =0 {no attempts} one {# attempt} other {# attempts}}",
+  "statusWithAttempts": "{status} · {attempts}",
+  "detail": {
+    "fallbackTitle": "Notification",
+    "toLabel": "To:",
+    "hotelLabel": "Hotel:",
+    "subject": "Subject",
+    "bodyPreview": "Body preview",
+    "bodyPreviewTitle": "Email body preview",
+    "noBody": "No rendered body — this notification failed before rendering.",
+    "timeline": "Delivery timeline",
+    "noAttempts": "No attempts yet.",
+    "delivered": "Delivered",
+    "failed": "Failed",
+    "failedWithError": "Failed — {error}"
+  },
+  "resend": {
+    "resentSetupLink": "Resent — a new setup link was generated; the previous link is now invalid.",
+    "resentGeneric": "Resent as a new notification.",
+    "confirmSetupLink": "This generates a new setup link and immediately invalidates the previous one. The new link is emailed to the owner.",
+    "confirmGeneric": "This sends a fresh copy of this email to {email}.",
+    "regenerateAction": "Regenerate & resend",
+    "resendAction": "Resend",
+    "confirmRegenerate": "Confirm — regenerate & resend",
+    "confirmResend": "Confirm resend"
+  }
+}

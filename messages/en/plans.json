@@ -1,0 +1,132 @@
+{
+  "eyebrow": "Billing",
+  "title": "Subscription plans",
+  "new": "New plan",
+  "loadError": "We couldn't load the plans.",
+  "list": {
+    "tabs": {
+      "all": "All",
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "table": {
+      "plan": "Plan",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "hotels": "Hotels",
+      "status": "Status",
+      "created": "Created"
+    },
+    "empty": {
+      "allTitle": "No plans yet",
+      "activeTitle": "No active plans",
+      "archivedTitle": "No archived plans",
+      "hint": "Create the first plan — for example a \"Standard\" default plan."
+    }
+  },
+  "status": {
+    "active": "Active",
+    "archived": "Archived"
+  },
+  "trialBadge": "{days, plural, one {# day trial} other {# day trial}}",
+  "details": {
+    "back": "All plans",
+    "notFound": "This plan no longer exists.",
+    "loadError": "We couldn't load this plan.",
+    "actions": {
+      "edit": "Edit",
+      "archive": "Archive",
+      "restore": "Restore"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "subscribers": "Subscribed hotels ({count})"
+    },
+    "pricing": {
+      "title": "Pricing",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "yearlyUnavailable": "Unavailable"
+    },
+    "limits": {
+      "title": "Limits",
+      "rooms": "Rooms",
+      "staffUsers": "Staff users",
+      "guestRequests": "Guest requests / month",
+      "unlimited": "Unlimited"
+    },
+    "modules": {
+      "title": "Modules"
+    },
+    "audit": {
+      "title": "Audit",
+      "createdBy": "Created by",
+      "createdAt": "Created at",
+      "updatedAt": "Last updated"
+    }
+  },
+  "subscribers": {
+    "loadError": "We couldn't load the subscribed hotels.",
+    "emptyTitle": "No subscribed hotels",
+    "emptyHint": "Hotels appear here once they are put on this plan.",
+    "table": {
+      "hotel": "Hotel",
+      "since": "Since",
+      "billingCycle": "Billing cycle",
+      "status": "Status"
+    },
+    "billingCycle": {
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "status": {
+      "active": "Active",
+      "trial": "Trial",
+      "past_due": "Past due",
+      "canceled": "Canceled",
+      "expired": "Expired"
+    },
+    "daysRemaining": "{count, plural, one {# day remaining} other {# days remaining}}"
+  },
+  "form": {
+    "createTitle": "New plan",
+    "editTitle": "Edit plan",
+    "nameEn": "Name (English)",
+    "nameAr": "Name (Arabic)",
+    "descriptionEn": "Description (English)",
+    "descriptionAr": "Description (Arabic)",
+    "monthlyPrice": "Monthly price",
+    "yearlyPrice": "Yearly price",
+    "yearlyHint": "Leave empty to disable yearly billing.",
+    "currency": "Currency",
+    "limitsLegend": "Limits",
+    "maxRooms": "Max rooms",
+    "maxStaffUsers": "Max staff users",
+    "maxGuestRequests": "Max guest requests / month",
+    "limitHint": "Empty = unlimited.",
+    "modulesLegend": "Enabled modules",
+    "selectModule": "Select at least one module.",
+    "trial": "Trial plan",
+    "trialDuration": "Trial duration (days)",
+    "trialHint": "Applies to new trials only — running trials keep their end date.",
+    "createSubmit": "Create plan",
+    "saveSubmit": "Save changes",
+    "saveError": "We couldn't save the plan.",
+    "violation": "<name></name>: <field></field> — usage {usage}, new limit {limit}"
+  },
+  "archiveDialog": {
+    "archiveTitle": "Archive plan?",
+    "restoreTitle": "Restore plan?",
+    "archiveBody": "<strong>{name}</strong> stops being offered — it disappears from plan-selection dropdowns but stays in historical records. There is no delete; archiving is reversible.",
+    "restoreBody": "<strong>{name}</strong> becomes selectable again for new subscriptions.",
+    "migrateHint": "{count, plural, one {Migrate the # subscribed hotel to another plan first.} other {Migrate the # subscribed hotels to another plan first.}}",
+    "archiveConfirm": "Archive plan",
+    "restoreConfirm": "Restore plan",
+    "actionError": "We couldn't complete this action."
+  },
+  "impactDialog": {
+    "title": "Apply changes to subscribed hotels?",
+    "body": "Changing limits or modules affects <strong>{count, plural, one {# subscribed hotel} other {# subscribed hotels}}</strong> immediately on save. Modules that are disabled become unavailable in those hotels' dashboards.",
+    "apply": "Apply changes"
+  }
+}
