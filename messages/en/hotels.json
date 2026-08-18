@@ -98,8 +98,8 @@
       "starRating": "Star rating",
       "optional": "(optional)",
       "notRated": "Not rated",
-      "roomsCount": "Rooms count (optional)",
-      "roomsHint": "Compared against the plan's room limit.",
+      "roomsCount": "Declared rooms count (reference only)",
+      "roomsHint": "Sales reference only — the live count comes from the hotel's actual rooms.",
       "address": "Address (optional)",
       "addressHint": "Set by picking a result from the address search above.",
       "addressSearch": "Search address (Google Maps)",
@@ -178,6 +178,7 @@
       "starRating": "Star rating",
       "notRated": "Not rated",
       "rooms": "Rooms",
+      "declaredRooms": "Declared (reference)",
       "replaceLogo": "Replace logo",
       "uploadLogo": "Upload logo",
       "uploading": "Uploading…",
@@ -270,24 +271,15 @@
     "currency": "Currency",
     "starRating": "Star rating",
     "notRated": "Not rated",
-    "roomsCount": "Rooms count",
-    "roomsHint": "Checked against the current plan's room limit.",
     "address": "Address",
     "addressHint": "Set by picking a result from the address search above.",
     "addressSearch": "Search address (Google Maps)",
     "addressSearchHint": "Pick a result to fill in the address, country, and city.",
     "saveFailed": "We couldn't save the changes. Please try again.",
-    "violationLine": "{field}: usage {usage}, limit {limit}",
-    "forcePastLimit": "Force past the limit",
     "slugConfirm": {
       "title": "Change the slug?",
       "body": "The slug becomes <slugTag>{slug}</slugTag>, which changes the tenant dashboard and guest app URLs immediately. Links shared with the hotel stop working. The change is audit-logged with old and new values.",
       "submit": "Change slug"
-    },
-    "forceConfirm": {
-      "title": "Force past the plan limit?",
-      "body": "The rooms count exceeds the current plan's limit. Forcing the update puts the hotel over its plan immediately — the override is audit-logged.",
-      "submit": "Force update"
     }
   },
   "subscription": {

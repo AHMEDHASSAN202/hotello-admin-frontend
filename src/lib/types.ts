@@ -183,7 +183,10 @@ export interface HotelDetail {
   timezone: string;
   defaultLanguage: string;
   currency: string;
+  /** Derived from the hotel's actual rooms (active + out_of_service); the number used for plan-limit checks. */
   roomsCount: number;
+  /** Sales-declared reference value only — not enforced, not derived from real rooms. */
+  declaredRoomsCount: number;
   staffUsersCount: number;
   monthlyGuestRequests: number;
   suspension: {

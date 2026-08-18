@@ -300,7 +300,9 @@ export default function OnboardHotelPage() {
             address: profile.address.trim() || undefined,
             latitude: profile.latitude ?? undefined,
             longitude: profile.longitude ?? undefined,
-            roomsCount: profile.roomsCount ? Number(profile.roomsCount) : undefined,
+            declaredRoomsCount: profile.roomsCount
+              ? Number(profile.roomsCount)
+              : undefined,
           },
           plan: {
             planId,

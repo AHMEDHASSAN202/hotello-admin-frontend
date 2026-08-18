@@ -9,7 +9,7 @@ import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
 import { citiesFor, COUNTRIES, findCountry, locationLabel } from '@/lib/locations';
 import { useMe } from '@/lib/use-me';
-import { HotelDetail, LimitViolation } from '@/lib/types';
+import { HotelDetail } from '@/lib/types';
 
 interface HotelFormState {
   nameEn: string;
@@ -26,7 +26,6 @@ interface HotelFormState {
   address: string;
   latitude: number | null;
   longitude: number | null;
-  roomsCount: string;
 }
 
 function fromHotel(hotel: HotelDetail): HotelFormState {
@@ -45,14 +44,14 @@ function fromHotel(hotel: HotelDetail): HotelFormState {
     address: hotel.address ?? '',
     latitude: hotel.latitude,
     longitude: hotel.longitude,
-    roomsCount: String(hotel.roomsCount),
   };
 }
 
 /**
  * Story 5.4 — edit modal. Slug is locked except for Super Admin (*), whose
- * edits go through an explicit URL-change confirm (5.3 AC3). A 409 rooms
- * conflict renders the violations with a wildcard-only force override.
+ * edits go through an explicit URL-change confirm (5.3 AC3). Rooms count is
+ * no longer editable here — it is derived from the hotel's actual rooms
+ * (Story 11.6); see the Rooms tab for that management surface.
  */
 export function HotelFormModal({
   open,
@@ -74,15 +73,13 @@ export function HotelFormModal({
 
   const [form, setForm] = useState<HotelFormState>(() => fromHotel(hotel));
   const [formError, setFormError] = useState<string | null>(null);
-  const [violations, setViolations] = useState<LimitViolation[]>([]);
-  const [confirming, setConfirming] = useState<'slug' | 'force' | null>(null);
+  const [confirming, setConfirming] = useState<'slug' | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setForm(fromHotel(hotel));
     setFormError(null);
-    setViolations([]);
     setConfirming(null);
   }, [open, hotel]);
 
@@ -92,7 +89,7 @@ export function HotelFormModal({
     setForm((prev) => ({ ...prev, ...patch }));
   }
 
-  async function submit(force = false) {
+  async function submit() {
     setSaving(true);
     setFormError(null);
     try {
@@ -116,8 +113,6 @@ export function HotelFormModal({
           ...(form.latitude !== null && form.longitude !== null
             ? { latitude: form.latitude, longitude: form.longitude }
             : {}),
-          roomsCount: Number(form.roomsCount) || 0,
-          ...(force ? { force: true } : {}),
         }),
       });
       setConfirming(null);
@@ -127,8 +122,6 @@ export function HotelFormModal({
       setConfirming(null);
       if (err instanceof ApiError) {
         setFormError(resolveError(err));
-        const details = err.details as { violations?: LimitViolation[] } | undefined;
-        setViolations(err.status === 409 ? (details?.violations ?? []) : []);
       } else {
         setFormError(t('form.saveFailed'));
       }
@@ -162,30 +155,6 @@ export function HotelFormModal({
               className="rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger"
             >
               <p>{formError}</p>
-              {violations.length > 0 && (
-                <ul className="mt-1 list-inside list-disc">
-                  {violations.map((v, i) => (
-                    <li key={i}>
-                      {v.message ??
-                        t('form.violationLine', {
-                          field: v.field,
-                          usage: v.usage,
-                          limit: v.limit,
-                        })}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {violations.length > 0 && isWildcard && (
-                <Button
-                  type="button"
-                  variant="danger"
-                  className="mt-2"
-                  onClick={() => setConfirming('force')}
-                >
-                  {t('form.forcePastLimit')}
-                </Button>
-              )}
             </div>
           )}
 
@@ -308,17 +277,6 @@ export function HotelFormModal({
                 ))}
               </select>
             </label>
-            <Field
-              label={t('form.roomsCount')}
-              type="number"
-              min={0}
-              value={form.roomsCount}
-              onChange={(e) => {
-                update({ roomsCount: e.target.value });
-                setViolations([]);
-              }}
-              hint={t('form.roomsHint')}
-            />
           </div>
 
           <AddressAutocomplete
@@ -374,23 +332,6 @@ export function HotelFormModal({
           </Button>
           <Button variant="danger" loading={saving} onClick={() => submit()}>
             {t('form.slugConfirm.submit')}
-          </Button>
-        </div>
-      </Modal>
-
-      {/* Rooms-limit force confirm (wildcard only) */}
-      <Modal
-        open={open && confirming === 'force'}
-        onClose={() => setConfirming(null)}
-        title={t('form.forceConfirm.title')}
-      >
-        <p className="text-sm text-ink-soft">{t('form.forceConfirm.body')}</p>
-        <div className="mt-6 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setConfirming(null)}>
-            {tCommon('actions.back')}
-          </Button>
-          <Button variant="danger" loading={saving} onClick={() => submit(true)}>
-            {t('form.forceConfirm.submit')}
           </Button>
         </div>
       </Modal>

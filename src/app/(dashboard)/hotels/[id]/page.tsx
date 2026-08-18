@@ -364,6 +364,10 @@ export default function HotelDetailPage() {
                 label={t('detail.profile.rooms')}
                 value={String(hotel.roomsCount)}
               />
+              <Row
+                label={t('detail.profile.declaredRooms')}
+                value={String(hotel.declaredRoomsCount)}
+              />
             </dl>
             {canUpdate && (
               <div className="mt-4 border-t border-line pt-4">
