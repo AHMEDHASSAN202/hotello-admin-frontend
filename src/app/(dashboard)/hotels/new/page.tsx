@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   ChangeEvent,
   ReactNode,
@@ -19,11 +19,22 @@ import {
   useRef,
   useState,
 } from 'react';
+import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { CopyButton } from '@/components/copy-button';
 import { SetupEmailStatus } from '@/components/setup-email-status';
-import { Badge, Bdi, Button, Code, ErrorState, Field } from '@/components/ui';
+import {
+  Badge,
+  Bdi,
+  Button,
+  Code,
+  ErrorState,
+  Field,
+  SelectField,
+} from '@/components/ui';
 import { api, ApiError, apiUpload } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
+import { defaultLogoDataUrl, defaultLogoFile } from '@/lib/default-logo';
+import { citiesFor, COUNTRIES, findCountry, locationLabel } from '@/lib/locations';
 import { useFormatters } from '@/i18n/use-format';
 import {
   LimitViolation,
@@ -65,6 +76,8 @@ interface ProfileForm {
   currency: string;
   starRating: string;
   address: string;
+  latitude: number | null;
+  longitude: number | null;
   roomsCount: string;
 }
 
@@ -81,6 +94,8 @@ const EMPTY_PROFILE: ProfileForm = {
   currency: 'EGP',
   starRating: '',
   address: '',
+  latitude: null,
+  longitude: null,
   roomsCount: '',
 };
 
@@ -101,6 +116,7 @@ function slugProblem(slug: string): SlugProblem | null {
 export default function OnboardHotelPage() {
   const t = useTranslations('hotels');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
   const resolveError = useApiError();
   const { formatCurrency, formatDateTime } = useFormatters();
   const router = useRouter();
@@ -282,6 +298,8 @@ export default function OnboardHotelPage() {
             currency: profile.currency.trim() || undefined,
             starRating: profile.starRating ? Number(profile.starRating) : undefined,
             address: profile.address.trim() || undefined,
+            latitude: profile.latitude ?? undefined,
+            longitude: profile.longitude ?? undefined,
             roomsCount: profile.roomsCount ? Number(profile.roomsCount) : undefined,
           },
           plan: {
@@ -293,14 +311,14 @@ export default function OnboardHotelPage() {
       });
 
       // Best-effort logo upload after the hotel exists (transaction is JSON-only).
-      if (logoFile) {
-        const form = new FormData();
-        form.append('file', logoFile);
-        try {
-          await apiUpload(`/hotels/${created.hotel.id}/logo`, form);
-        } catch {
-          setLogoUploadWarning(t('onboarding.success.logoWarning'));
-        }
+      // No file picked → upload the auto-generated initials logo instead.
+      const upload = logoFile ?? defaultLogoFile(profile.nameEn.trim());
+      const form = new FormData();
+      form.append('file', upload);
+      try {
+        await apiUpload(`/hotels/${created.hotel.id}/logo`, form);
+      } catch {
+        setLogoUploadWarning(t('onboarding.success.logoWarning'));
       }
       setResult(created);
     } catch (err) {
@@ -539,17 +557,44 @@ export default function OnboardHotelPage() {
                 value={profile.contactPhone}
                 onChange={(e) => updateProfile({ contactPhone: e.target.value })}
               />
-              <Field
+              <SelectField
+                label={t('onboarding.profileStep.country')}
+                required
+                value={profile.country}
+                onChange={(e) => {
+                  const country = findCountry(e.target.value);
+                  // Switching country invalidates the city and refreshes the
+                  // editable timezone/currency defaults.
+                  updateProfile({
+                    country: e.target.value,
+                    city: '',
+                    ...(country
+                      ? { timezone: country.timezone, currency: country.currency }
+                      : {}),
+                  });
+                }}
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c.nameEn} value={c.nameEn}>
+                    {locationLabel(c, locale)}
+                  </option>
+                ))}
+              </SelectField>
+              <SelectField
                 label={t('onboarding.profileStep.city')}
                 required
                 value={profile.city}
                 onChange={(e) => updateProfile({ city: e.target.value })}
-              />
-              <Field
-                label={t('onboarding.profileStep.country')}
-                value={profile.country}
-                onChange={(e) => updateProfile({ country: e.target.value })}
-              />
+              >
+                <option value="">
+                  {t('onboarding.profileStep.selectCity')}
+                </option>
+                {citiesFor(profile.country).map((c) => (
+                  <option key={c.nameEn} value={c.nameEn}>
+                    {locationLabel(c, locale)}
+                  </option>
+                ))}
+              </SelectField>
               <Field
                 label={t('onboarding.profileStep.timezone')}
                 value={profile.timezone}
@@ -613,10 +658,31 @@ export default function OnboardHotelPage() {
               />
             </div>
 
+            <AddressAutocomplete
+              label={t('onboarding.profileStep.addressSearch')}
+              hint={t('onboarding.profileStep.addressSearchHint')}
+              locale={locale}
+              onPlace={({ address, latitude, longitude, country, city }) => {
+                const patch: Partial<ProfileForm> = {
+                  address,
+                  latitude,
+                  longitude,
+                };
+                const matched = country ? findCountry(country) : undefined;
+                if (matched) {
+                  patch.country = matched.nameEn;
+                  patch.city = city ?? '';
+                  patch.timezone = matched.timezone;
+                  patch.currency = matched.currency;
+                }
+                updateProfile(patch);
+              }}
+            />
             <Field
               label={t('onboarding.profileStep.address')}
               value={profile.address}
-              onChange={(e) => updateProfile({ address: e.target.value })}
+              readOnly
+              hint={t('onboarding.profileStep.addressHint')}
             />
 
             <div>
@@ -627,10 +693,10 @@ export default function OnboardHotelPage() {
                 </span>
               </span>
               <div className="flex items-center gap-3">
-                {logoPreview && (
+                {(logoPreview || profile.nameEn.trim()) && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={logoPreview}
+                    src={logoPreview ?? defaultLogoDataUrl(profile.nameEn)}
                     alt={t('onboarding.profileStep.logoPreviewAlt')}
                     className="h-12 w-12 rounded-lg border border-line object-cover"
                   />
@@ -644,7 +710,8 @@ export default function OnboardHotelPage() {
                 />
               </div>
               <p className="mt-1 text-xs text-ink-soft">
-                {t('onboarding.profileStep.logoHint')}
+                {t('onboarding.profileStep.logoHint')}{' '}
+                {!logoFile && t('onboarding.profileStep.logoDefaultHint')}
               </p>
               {logoError && (
                 <p className="mt-1 text-xs text-danger">{logoError}</p>

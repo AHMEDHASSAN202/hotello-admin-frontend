@@ -1,11 +1,13 @@
 'use client';
 
 import { Lock } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { FormEvent, useEffect, useState } from 'react';
-import { Button, Code, Field, Modal } from '@/components/ui';
+import { AddressAutocomplete } from '@/components/address-autocomplete';
+import { Button, Code, Field, Modal, SelectField } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useApiError } from '@/lib/errors';
+import { citiesFor, COUNTRIES, findCountry, locationLabel } from '@/lib/locations';
 import { useMe } from '@/lib/use-me';
 import { HotelDetail, LimitViolation } from '@/lib/types';
 
@@ -22,6 +24,8 @@ interface HotelFormState {
   currency: string;
   starRating: string;
   address: string;
+  latitude: number | null;
+  longitude: number | null;
   roomsCount: string;
 }
 
@@ -39,6 +43,8 @@ function fromHotel(hotel: HotelDetail): HotelFormState {
     currency: hotel.currency,
     starRating: hotel.starRating === null ? '' : String(hotel.starRating),
     address: hotel.address ?? '',
+    latitude: hotel.latitude,
+    longitude: hotel.longitude,
     roomsCount: String(hotel.roomsCount),
   };
 }
@@ -61,6 +67,7 @@ export function HotelFormModal({
 }) {
   const t = useTranslations('hotels');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
   const resolveError = useApiError();
   const { hasPermission } = useMe();
   const isWildcard = hasPermission('*');
@@ -104,6 +111,11 @@ export function HotelFormModal({
           currency: form.currency.trim(),
           ...(form.starRating ? { starRating: Number(form.starRating) } : {}),
           address: form.address.trim(),
+          // Coordinates only travel with a Places-selected address (the DTO
+          // rejects null).
+          ...(form.latitude !== null && form.longitude !== null
+            ? { latitude: form.latitude, longitude: form.longitude }
+            : {}),
           roomsCount: Number(form.roomsCount) || 0,
           ...(force ? { force: true } : {}),
         }),
@@ -223,17 +235,39 @@ export function HotelFormModal({
               value={form.contactPhone}
               onChange={(e) => update({ contactPhone: e.target.value })}
             />
-            <Field
+            <SelectField
+              label={t('form.country')}
+              required
+              value={form.country}
+              onChange={(e) => update({ country: e.target.value, city: '' })}
+            >
+              {/* Legacy free-text values stay selectable so old rows load intact. */}
+              {form.country && !findCountry(form.country) && (
+                <option value={form.country}>{form.country}</option>
+              )}
+              {COUNTRIES.map((c) => (
+                <option key={c.nameEn} value={c.nameEn}>
+                  {locationLabel(c, locale)}
+                </option>
+              ))}
+            </SelectField>
+            <SelectField
               label={t('form.city')}
               required
               value={form.city}
               onChange={(e) => update({ city: e.target.value })}
-            />
-            <Field
-              label={t('form.country')}
-              value={form.country}
-              onChange={(e) => update({ country: e.target.value })}
-            />
+            >
+              <option value="">{t('form.selectCity')}</option>
+              {form.city &&
+                !citiesFor(form.country).some((c) => c.nameEn === form.city) && (
+                  <option value={form.city}>{form.city}</option>
+                )}
+              {citiesFor(form.country).map((c) => (
+                <option key={c.nameEn} value={c.nameEn}>
+                  {locationLabel(c, locale)}
+                </option>
+              ))}
+            </SelectField>
             <Field
               label={t('form.timezone')}
               value={form.timezone}
@@ -287,10 +321,28 @@ export function HotelFormModal({
             />
           </div>
 
+          <AddressAutocomplete
+            label={t('form.addressSearch')}
+            hint={t('form.addressSearchHint')}
+            locale={locale}
+            onPlace={({ address, latitude, longitude, country, city }) => {
+              const patch: Partial<HotelFormState> = {
+                address,
+                latitude,
+                longitude,
+              };
+              if (country) {
+                patch.country = country;
+                patch.city = city ?? '';
+              }
+              update(patch);
+            }}
+          />
           <Field
             label={t('form.address')}
             value={form.address}
-            onChange={(e) => update({ address: e.target.value })}
+            readOnly
+            hint={t('form.addressHint')}
           />
 
           <div className="flex justify-end gap-2 pt-2">

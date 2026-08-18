@@ -176,6 +176,8 @@ export interface HotelDetail {
   contactEmail: string;
   contactPhone: string;
   address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   city: string;
   country: string;
   timezone: string;

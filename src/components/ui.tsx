@@ -13,6 +13,7 @@ import {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
   ReactNode,
+  SelectHTMLAttributes,
   useEffect,
 } from 'react';
 
@@ -110,6 +111,34 @@ export function Field({
         className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-ink-soft/50"
         {...rest}
       />
+      {hint && <span className="mt-1 block text-xs text-ink-soft">{hint}</span>}
+      {error && <span className="mt-1 block text-xs text-danger">{error}</span>}
+    </label>
+  );
+}
+
+/** Labeled <select> — the dropdown counterpart of Field. */
+export function SelectField({
+  label,
+  hint,
+  error,
+  children,
+  ...rest
+}: SelectHTMLAttributes<HTMLSelectElement> & {
+  label: string;
+  hint?: string;
+  error?: string;
+  children: ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-sm font-medium text-ink">{label}</span>
+      <select
+        className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-ink"
+        {...rest}
+      >
+        {children}
+      </select>
       {hint && <span className="mt-1 block text-xs text-ink-soft">{hint}</span>}
       {error && <span className="mt-1 block text-xs text-danger">{error}</span>}
     </label>

@@ -9,7 +9,7 @@ export default function DashboardLayout({
   return (
     // Sidebar is the first flex child, so dir="rtl" moves it to the right
     // automatically (AC 7.3-2) — no per-direction overrides needed.
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-end gap-3 border-b border-line bg-white px-8">

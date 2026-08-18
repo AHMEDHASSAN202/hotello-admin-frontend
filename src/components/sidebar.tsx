@@ -67,7 +67,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex h-screen w-60 flex-col bg-ink-deep text-white">
+    <aside className="flex h-full w-60 flex-col bg-ink-deep text-white">
       <div className="px-6 py-7">
         <p className="font-display text-xl font-bold tracking-wide">
           {t('brand.name')}
@@ -77,7 +77,7 @@ export function Sidebar() {
         </p>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3" aria-label={t('nav.main')}>
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3" aria-label={t('nav.main')}>
         {visibleItems.map(({ href, labelKey, icon: Icon }) => {
           const active =
             href === '/' ? pathname === '/' : pathname.startsWith(href);
