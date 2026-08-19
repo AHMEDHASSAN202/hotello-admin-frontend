@@ -51,7 +51,7 @@ export default function HotelDetailPage() {
   const t = useTranslations('hotels');
   const tCommon = useTranslations('common');
   const resolveError = useApiError();
-  const { formatDate, formatDateTime } = useFormatters();
+  const { formatDate, formatDateTime, formatNumber } = useFormatters();
   const { id } = useParams<{ id: string }>();
   const { hasPermission } = useMe();
 
@@ -362,11 +362,11 @@ export default function HotelDetailPage() {
               />
               <Row
                 label={t('detail.profile.rooms')}
-                value={String(hotel.roomsCount)}
+                value={formatNumber(hotel.roomsCount ?? 0)}
               />
               <Row
                 label={t('detail.profile.declaredRooms')}
-                value={String(hotel.declaredRoomsCount)}
+                value={formatNumber(hotel.declaredRoomsCount ?? 0)}
               />
             </dl>
             {canUpdate && (

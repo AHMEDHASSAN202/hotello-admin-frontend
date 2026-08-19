@@ -51,7 +51,7 @@ function fromHotel(hotel: HotelDetail): HotelFormState {
  * Story 5.4 — edit modal. Slug is locked except for Super Admin (*), whose
  * edits go through an explicit URL-change confirm (5.3 AC3). Rooms count is
  * no longer editable here — it is derived from the hotel's actual rooms
- * (Story 11.6); see the Rooms tab for that management surface.
+ * (Story 11.6); managed by the hotel in the Tenant Dashboard (Story 11.6).
  */
 export function HotelFormModal({
   open,
