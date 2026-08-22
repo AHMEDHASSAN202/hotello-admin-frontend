@@ -35,3 +35,13 @@ Internal platform dashboard (Next.js) where GXP staff manage hotels, plans, subs
 Feature specs live in the backend repo (`hotello-backend`) under `/specs`. Before
 planning or implementing any feature, read its epic file fully — it is the source of
 truth. Durable decisions made during Q&A go back into the epic file.
+
+## Workflow (pre-production convention — revisit at launch)
+
+- All work happens directly on `master`. No feature branches, no stacked epic
+  branches, no worktrees.
+- Small, clear commits per task; push to origin after each verified green
+  state — `origin/master` always holds the latest work.
+- Quality gates never relax: `npm test` + `npm run build` (includes the i18n
+  completeness check) must be green before every push. Never push red.
+- Changes spanning repos land backend-first, then the frontends.
